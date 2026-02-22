@@ -52,7 +52,8 @@ const els = {
     chatWallpaper: document.getElementById('chatWallpaper'),
     messagesArea: document.getElementById('messagesArea'),
     messagesContainer: document.getElementById('messagesContainer'),
-    messagesTopGlow: document.getElementById('messagesTopGlow'),
+    scrollToBottomBtn: document.getElementById('scrollToBottomBtn'),
+    toastContainer: document.getElementById('toastContainer'),
     skeletonLoader: document.getElementById('skeletonLoader'),
     typingIndicator: document.getElementById('typingIndicator'),
     scrollBottomBtn: document.getElementById('scrollBottomBtn'),
@@ -412,6 +413,17 @@ function initFirebase() {
         app = firebase.initializeApp(firebaseConfig);
         db = firebase.database();
         storage = firebase.storage();
+    }
+    // Update homepage subtitle to show connected status
+    const subtitle = document.getElementById('homeWelcome');
+    if (subtitle) {
+        subtitle.textContent = '✓ Connected';
+        subtitle.style.color = '#25D366';
+        subtitle.style.opacity = '1';
+        setTimeout(() => {
+            subtitle.textContent = 'CHOOSE YOUR IDENTITY';
+            subtitle.style.color = '';
+        }, 2000);
     }
     showToast("Connected to Firebase", "success");
 }
@@ -872,7 +884,7 @@ function handleImageSelection(event) {
 }
 
 function simulateAndUploadImage(file, base64Preview) {
-    if (!db || !storage) {
+    if (!db) {
         showToast("Firebase required for images", "error");
         return;
     }
@@ -888,6 +900,8 @@ function simulateAndUploadImage(file, base64Preview) {
     scrollToBottom(true);
 
     const bubble = document.querySelector(`.message-bubble[data-id="${bubbleId}"]`);
+    if (!bubble) return;
+
     const imgWrapper = document.createElement('div');
     imgWrapper.className = 'image-uploading-overlay';
     imgWrapper.innerHTML = `
@@ -900,35 +914,31 @@ function simulateAndUploadImage(file, base64Preview) {
     const circle = imgWrapper.querySelector('.progress-ring__circle');
     const circumference = 16 * 2 * Math.PI;
     circle.style.strokeDasharray = `${circumference} ${circumference}`;
-    circle.style.strokeDashoffset = circumference;
+    circle.style.strokeDashoffset = circumference * 0.4; // Show fake 60% progress
 
-    // Firebase Upload
-    const fileName = `${Date.now()}_${file.name}`;
-    const storageRef = storage.ref(`images/${fileName}`);
-    const uploadTask = storageRef.put(file);
+    // Bypassing Firebase Storage due to anonymous auth limits.
+    // Compress and send direct to Realtime DB as Base64 string.
+    compressImage(file, 800, 0.6).then(compressedBlob => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const compressedBase64 = reader.result;
 
-    uploadTask.on('state_changed',
-        (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes);
-            circle.style.strokeDashoffset = circumference - progress * circumference;
-        },
-        (error) => {
-            showToast("Upload failed", "error");
-            bubble.remove();
-        },
-        () => {
-            uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                // Upload complete visuals
-                circle.style.stroke = "var(--wa-teal-green-light)";
-                imgWrapper.classList.add('complete-fade');
-                setTimeout(() => imgWrapper.remove(), 300);
+            // Upload complete visuals
+            circle.style.strokeDashoffset = 0;
+            circle.style.stroke = "var(--wa-teal-green-light)";
+            imgWrapper.classList.add('complete-fade');
 
-                // Replace temp ID with real DB entry
-                bubble.remove();
-                sendMessage('', 'image', downloadURL);
-            });
-        }
-    );
+            setTimeout(() => {
+                imgWrapper.remove();
+                bubble.remove(); // Remove temp bubble
+                sendMessage('', 'image', compressedBase64); // Send real message
+            }, 300);
+        };
+        reader.readAsDataURL(compressedBlob);
+    }).catch(err => {
+        showToast("Upload failed", "error");
+        bubble.remove();
+    });
 }
 
 // ==========================================
@@ -1127,27 +1137,9 @@ els.captionCharCount = document.getElementById('captionCharCount');
 
 let currentPreviewFile = null;
 
-// Overwrite the original handleImageSelection to use the preview modal
-window.handleImageSelection = function (event) {
-    const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-        closeAllModals(); // Close attachments
-
-        currentPreviewFile = file;
-        els.captionInput.value = '';
-        els.captionCharCount.textContent = `0 / 1024`;
-
-        // Use FileReader to show preview instantly
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            els.previewImage.src = e.target.result;
-            openImagePreviewModal();
-        };
-        reader.readAsDataURL(file);
-    }
-    // reset input
-    event.target.value = '';
-};
+// Overwrite DISABLED — images now send directly via the original handleImageSelection (line 871)
+// window.handleImageSelection = function (event) { ... };
+// The original function at line 871 reads the file and calls simulateAndUploadImage() directly.
 
 function openImagePreviewModal() {
     els.previewModal.style.display = 'flex';
@@ -1166,18 +1158,20 @@ function closeImagePreview() {
     }, 300);
 }
 
-els.captionInput.addEventListener('input', (e) => {
-    const len = e.target.value.length;
-    els.captionCharCount.textContent = `${len} / 1024`;
-    if (len >= 1024) e.target.value = e.target.value.substring(0, 1024);
-});
+if (els.captionInput) {
+    els.captionInput.addEventListener('input', (e) => {
+        const len = e.target.value.length;
+        if (els.captionCharCount) els.captionCharCount.textContent = `${len} / 1024`;
+        if (len >= 1024) e.target.value = e.target.value.substring(0, 1024);
+    });
 
-// Trigger send via enter key on caption
-els.captionInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        sendPreviewImage();
-    }
-});
+    // Trigger send via enter key on caption
+    els.captionInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            sendPreviewImage();
+        }
+    });
+}
 
 function sendPreviewImage() {
     if (!currentPreviewFile) return;
