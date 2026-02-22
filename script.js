@@ -1372,6 +1372,84 @@ function handleContextDownload() {
     }
 }
 
+// ==========================================
+// HOMEPAGE PARTICLES GENERATOR
+// ==========================================
+function generateHomepageParticles() {
+    const container = document.getElementById('particlesContainer');
+    if (!container) return;
+
+    // Bokeh circles (15)
+    for (let i = 0; i < 15; i++) {
+        const bokeh = document.createElement('div');
+        const size = 4 + Math.random() * 16;
+        const x = 5 + Math.random() * 90;
+        const y = 5 + Math.random() * 90;
+        const dx = -30 + Math.random() * 60;
+        const dy = -40 + Math.random() * 80;
+        const opStart = 0.2 + Math.random() * 0.3;
+        const opMid = 0.4 + Math.random() * 0.4;
+        const dur = 8 + Math.random() * 12;
+        const delay = -(Math.random() * 10);
+
+        bokeh.style.cssText = `
+            position:absolute; width:${size}px; height:${size}px;
+            left:${x}%; top:${y}%; border-radius:50%;
+            background:radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 60%, transparent 100%);
+            --drift-x:${dx}px; --drift-y:${dy}px;
+            --opacity-start:${opStart}; --opacity-mid:${opMid};
+            animation: floatBokeh ${dur}s ease-in-out ${delay}s infinite;
+            will-change: transform, opacity;
+        `;
+        container.appendChild(bokeh);
+    }
+
+    // Micro-particles (25)
+    for (let i = 0; i < 25; i++) {
+        const particle = document.createElement('div');
+        const size = 2 + Math.random() * 2;
+        const x = Math.random() * 100;
+        const y = 50 + Math.random() * 50;
+        const drift = -50 + Math.random() * 100;
+        const maxOp = 0.1 + Math.random() * 0.2;
+        const dur = 10 + Math.random() * 15;
+        const delay = -(Math.random() * 10);
+
+        particle.style.cssText = `
+            position:absolute; width:${size}px; height:${size}px;
+            left:${x}%; top:${y}%; border-radius:50%;
+            background: rgba(255,255,255,0.15);
+            --drift:${drift}px; --max-opacity:${maxOp};
+            animation: particleFloat ${dur}s linear ${delay}s infinite;
+            will-change: transform, opacity;
+        `;
+        container.appendChild(particle);
+    }
+}
+
+// Inject particle CSS keyframes dynamically
+(function injectParticleStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes floatBokeh {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: var(--opacity-start); }
+            25% { transform: translate(var(--drift-x), var(--drift-y)) scale(1.2); opacity: var(--opacity-mid); }
+            50% { transform: translate(calc(var(--drift-x) * -0.5), calc(var(--drift-y) * 1.5)) scale(0.8); opacity: var(--opacity-start); }
+            75% { transform: translate(calc(var(--drift-x) * 0.7), calc(var(--drift-y) * -0.3)) scale(1.1); opacity: var(--opacity-mid); }
+        }
+        @keyframes particleFloat {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: var(--max-opacity); }
+            90% { opacity: var(--max-opacity); }
+            100% { transform: translateY(-100vh) translateX(var(--drift)); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+// Generate particles when DOM is ready
+document.addEventListener('DOMContentLoaded', generateHomepageParticles);
+
 // Global exposure
 Object.assign(window, {
     selectUser, goBack, toggleMenu, toggleAttachmentMenu, closeAllModals,

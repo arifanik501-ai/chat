@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#075E54">
+    <meta name="theme-color" content="#021A12">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>WhatsApp Clone Phase 2</title>
@@ -25,39 +25,89 @@
 
         <!-- HOMEPAGE -->
         <div id="homepage" class="screen active">
-            <header class="home-header" id="homeHeader">
-                <div class="logo" id="homeLogo">
-                    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-                        <path
-                            d="M12.01 2.06c-5.5 0-9.96 4.46-9.96 9.96 0 1.76.46 3.42 1.25 4.88L2 22l5.32-1.39A9.914 9.914 0 0012.01 22a9.96 9.96 0 000-19.94zm0 18.23c-1.47 0-2.88-.39-4.13-1.13l-.3-.18-3.07.8.82-3-.2-.31a8.216 8.216 0 01-1.35-4.47c0-4.54 3.7-8.24 8.23-8.24s8.24 3.7 8.24 8.24c0 4.54-3.7 8.24-8.24 8.24zm4.51-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.79.98-.15.17-.3.19-.55.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.88.86-.88 2.09 0 1.23.9 2.42 1.03 2.59.13.17 1.77 2.7 4.28 3.78 1.48.64 2.19.78 2.97.74.88-.04 2.01-.83 2.29-1.63.28-.8.28-1.49.2-1.63-.08-.15-.29-.24-.54-.36z" />
-                    </svg>
-                    <span>WhatsApp</span>
+            <!-- LAYER 0: Liquid Gradient Base -->
+            <div class="hp-liquid-bg"></div>
+
+            <!-- LAYER 1: Mesh Gradient Blobs -->
+            <div class="hp-mesh-blobs">
+                <div class="mesh-blob blob-a"></div>
+                <div class="mesh-blob blob-b"></div>
+                <div class="mesh-blob blob-c"></div>
+                <div class="mesh-blob blob-d"></div>
+                <div class="mesh-blob blob-e"></div>
+            </div>
+
+            <!-- LAYER 2: Particles (JS-generated) -->
+            <div class="hp-particles" id="particlesContainer"></div>
+
+            <!-- LAYER 3: Noise + Vignette -->
+            <div class="hp-noise-overlay"></div>
+            <div class="hp-vignette"></div>
+
+            <!-- LAYER 4: Decorative Liquid Blobs -->
+            <div class="hp-liquid-blob liquid-blob-1"></div>
+            <div class="hp-liquid-blob liquid-blob-2"></div>
+            <div class="hp-liquid-blob liquid-blob-3"></div>
+
+            <!-- LAYER 5: Main Content -->
+            <div class="hp-content">
+                <!-- Glass Header -->
+                <div class="hp-glass-header" id="homeHeader">
+                    <div class="hp-glass-reflection"></div>
+                    <div class="hp-logo" id="homeLogo">
+                        <svg viewBox="0 0 24 24" width="42" height="42" fill="currentColor">
+                            <path
+                                d="M12.01 2.06c-5.5 0-9.96 4.46-9.96 9.96 0 1.76.46 3.42 1.25 4.88L2 22l5.32-1.39A9.914 9.914 0 0012.01 22a9.96 9.96 0 000-19.94zm0 18.23c-1.47 0-2.88-.39-4.13-1.13l-.3-.18-3.07.8.82-3-.2-.31a8.216 8.216 0 01-1.35-4.47c0-4.54 3.7-8.24 8.23-8.24s8.24 3.7 8.24 8.24c0 4.54-3.7 8.24-8.24 8.24zm4.51-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.79.98-.15.17-.3.19-.55.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.88.86-.88 2.09 0 1.23.9 2.42 1.03 2.59.13.17 1.77 2.7 4.28 3.78 1.48.64 2.19.78 2.97.74.88-.04 2.01-.83 2.29-1.63.28-.8.28-1.49.2-1.63-.08-.15-.29-.24-.54-.36z" />
+                        </svg>
+                    </div>
+                    <h1 class="hp-title">WhatsApp</h1>
+                    <p class="hp-subtitle" id="homeWelcome">CHOOSE YOUR IDENTITY</p>
+                    <div class="hp-title-line"></div>
                 </div>
-            </header>
 
-            <main class="home-content">
-                <h1 class="welcome-text" id="homeWelcome">Choose Your Identity</h1>
-
-                <div class="user-cards">
-                    <!-- Anik -->
-                    <div class="user-card user-anik ripple-effect-js" onclick="selectUser('anik')">
-                        <div class="avatar-ph avatar-anik">A</div>
-                        <div class="card-info">
+                <!-- Glass Cards -->
+                <div class="hp-cards">
+                    <!-- Anik Card -->
+                    <div class="hp-glass-card card-anik" onclick="selectUser('anik')">
+                        <div class="hp-avatar-ring ring-anik">
+                            <div class="hp-avatar avatar-anik">A</div>
+                            <span class="hp-online-dot"></span>
+                        </div>
+                        <div class="hp-card-info">
                             <h2>Anik</h2>
                             <p>Tap to chat as Anik</p>
                         </div>
+                        <span class="hp-card-arrow">›</span>
                     </div>
 
-                    <!-- Priya -->
-                    <div class="user-card user-priya ripple-effect-js" onclick="selectUser('priya')">
-                        <div class="avatar-ph avatar-priya">P</div>
-                        <div class="card-info">
+                    <!-- Priya Card -->
+                    <div class="hp-glass-card card-priya" onclick="selectUser('priya')">
+                        <div class="hp-avatar-ring ring-priya">
+                            <div class="hp-avatar avatar-priya">P</div>
+                            <span class="hp-online-dot"></span>
+                        </div>
+                        <div class="hp-card-info">
                             <h2>Priya</h2>
                             <p>Tap to chat as Priya</p>
                         </div>
+                        <span class="hp-card-arrow">›</span>
                     </div>
                 </div>
-            </main>
+
+                <!-- Bottom Section -->
+                <div class="hp-bottom">
+                    <p class="hp-encrypted">🔒 END-TO-END ENCRYPTED</p>
+                    <div class="hp-dots">
+                        <span></span><span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <p class="hp-version">v2.24.1</p>
+                </div>
+            </div>
+
+            <!-- Glow Spot behind cards -->
+            <div class="hp-glow-spot"></div>
         </div>
 
         <!-- CHAT SCREEN -->
