@@ -148,19 +148,19 @@ button:active {
 
 /* Transition Classes */
 .screen-exit-to-left {
-    animation: exitToLeft 0.45s var(--ease-standard) forwards;
+    animation: exitToLeft 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 .screen-enter-from-right {
-    animation: enterFromRight 0.45s var(--ease-standard) forwards;
+    animation: enterFromRight 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 .screen-exit-to-right {
-    animation: exitToRight 0.4s var(--ease-standard) forwards;
+    animation: exitToRight 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 .screen-enter-from-left {
-    animation: enterFromLeft 0.4s var(--ease-standard) forwards;
+    animation: enterFromLeft 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 @keyframes exitToLeft {
@@ -170,15 +170,15 @@ button:active {
     }
 
     to {
-        transform: translate3d(-100%, 0, 0);
-        opacity: 0.3;
+        transform: translate3d(-25%, 0, 0);
+        opacity: 0;
     }
 }
 
 @keyframes enterFromRight {
     from {
         transform: translate3d(100%, 0, 0);
-        opacity: 0.3;
+        opacity: 0.6;
     }
 
     to {
@@ -195,16 +195,14 @@ button:active {
 
     to {
         transform: translate3d(100%, 0, 0);
-        opacity: 0.3;
+        opacity: 0.6;
     }
 }
 
 @keyframes enterFromLeft {
-
-    /* Parallax effect - starts at -30% so it feels like it's behind */
     from {
-        transform: translate3d(-30%, 0, 0);
-        opacity: 0.3;
+        transform: translate3d(-15%, 0, 0);
+        opacity: 0;
     }
 
     to {
@@ -213,37 +211,8 @@ button:active {
     }
 }
 
-/* Transition Shadows for Depth */
-.screen-enter-from-right::before,
-.screen-exit-to-right::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 10px;
-    height: 100%;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.15));
-    transform: translateX(-100%);
-    pointer-events: none;
-    z-index: 100;
+/* Shadow removed — was causing extra paint layers and lag */
 }
-
-.screen-enter-from-right::before {
-    animation: fadeShadow 0.45s var(--ease-standard) forwards reverse;
-}
-
-.screen-exit-to-right::before {
-    animation: fadeShadow 0.4s var(--ease-standard) forwards;
-}
-
-@keyframes fadeShadow {
-    from {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0;
-    }
 }
 
 /* =========================================
@@ -251,7 +220,7 @@ button:active {
    ========================================= */
 
 #homepage {
-    background: #021A12;
+    background: #010A07;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -279,7 +248,7 @@ button:active {
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(ellipse at 20% 50%, #0D7B5F 0%, #064A38 40%, #021A12 80%);
+    background: radial-gradient(ellipse at 20% 50%, #063A2D 0%, #03251C 40%, #010A07 80%);
     background-size: 200% 200%;
     animation: liquidBase 20s ease-in-out infinite;
     z-index: 0;
@@ -582,10 +551,10 @@ button:active {
     height: 200px;
     top: 3%;
     right: -12%;
-    background: linear-gradient(135deg, rgba(37, 211, 102, 0.15), rgba(0, 229, 160, 0.1));
+    background: linear-gradient(135deg, rgba(37, 211, 102, 0.08), rgba(0, 229, 160, 0.05));
     animation: liquidMorph1 12s ease-in-out infinite, rotate 30s linear infinite;
-    opacity: 0.6;
-    filter: blur(2px);
+    opacity: 0.4;
+    filter: blur(4px);
 }
 
 .liquid-blob-2 {
@@ -593,10 +562,10 @@ button:active {
     height: 160px;
     bottom: 12%;
     left: -8%;
-    background: linear-gradient(135deg, rgba(124, 77, 255, 0.12), rgba(179, 136, 255, 0.08));
+    background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(179, 136, 255, 0.04));
     animation: liquidMorph2 15s ease-in-out infinite, rotateReverse 25s linear infinite;
-    opacity: 0.5;
-    filter: blur(2px);
+    opacity: 0.3;
+    filter: blur(4px);
 }
 
 .liquid-blob-3 {
@@ -604,9 +573,9 @@ button:active {
     height: 250px;
     top: 35%;
     left: 20%;
-    background: radial-gradient(circle, rgba(37, 211, 102, 0.08) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(37, 211, 102, 0.05) 0%, transparent 70%);
     animation: liquidMorph1 20s ease-in-out infinite reverse;
-    opacity: 0.4;
+    opacity: 0.2;
 }
 
 @keyframes liquidMorph1 {

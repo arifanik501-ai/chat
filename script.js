@@ -160,15 +160,29 @@ function setTheme(themeName, closeMenu = true) {
     document.documentElement.setAttribute('data-theme', themeName);
     localStorage.setItem('whatsapp_theme', themeName);
 
-    if (closeMenu) {
-        // Find if any theme menu is open and close it
-        const homeMenu = document.getElementById('homeThemeMenu');
-        if (homeMenu && homeMenu.classList.contains('show')) {
-            homeMenu.classList.remove('show');
+    // Animate Unique Sliding Theme Toggle
+    const slider = document.getElementById('themeSlider');
+    if (slider) {
+        if (themeName === 'dark') {
+            slider.style.transform = 'translateX(0px)';
+            slider.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))';
+            slider.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
+        } else if (themeName === 'light') {
+            slider.style.transform = 'translateX(45px)';
+            slider.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.1))';
+            slider.style.boxShadow = '0 4px 15px rgba(255,255,255,0.2)';
+        } else if (themeName === 'green') {
+            slider.style.transform = 'translateX(90px)';
+            slider.style.background = 'linear-gradient(135deg, #00A884, #00765C)';
+            slider.style.boxShadow = '0 4px 15px rgba(0,168,132,0.5)';
         }
+    }
+
+    if (closeMenu) {
         closeAllModals(); // Closes chat dropdown
     }
 }
+
 
 function triggerHomepageEntrance() {
     if (!isFirstVisit) {
@@ -215,13 +229,12 @@ function selectUser(userId) {
     els.chatHeaderAvatar.className = `chat-avatar avatar-${otherUserId}`;
     els.chatHeaderName.childNodes[0].textContent = otherUser.name + " ";
 
-    // Wait for card tap animation to finish (0.15s), then transition
-    setTimeout(() => {
-        transitionToChat();
-        setupFirebaseListeners();
-        setupUserPresence();
-    }, 150);
+    // Transition immediately — no pre-delay needed
+    transitionToChat();
+    setupFirebaseListeners();
+    setupUserPresence();
 }
+
 
 function transitionToChat() {
     // Both screens animating
@@ -233,40 +246,38 @@ function transitionToChat() {
     els.homepage.classList.add('screen-exit-to-left');
     els.chatscreen.classList.add('screen-enter-from-right');
 
-    // Clean up classes after animation (0.45s)
+    // Clean up classes after animation (0.28s)
     setTimeout(() => {
         els.homepage.classList.remove('animating', 'screen-exit-to-left', 'active');
         els.chatscreen.classList.remove('animating', 'screen-enter-from-right');
 
         triggerChatscreenEntrance();
-    }, 450);
+    }, 300);
 }
 
 function goBack() {
     els.backBtn.classList.add('bounce-back');
 
+    els.homepage.classList.add('animating', 'active');
+    els.chatscreen.classList.add('animating');
+
+    els.homepage.classList.add('screen-enter-from-left');
+    els.chatscreen.classList.add('screen-exit-to-right');
+
     setTimeout(() => {
-        els.homepage.classList.add('animating', 'active');
-        els.chatscreen.classList.add('animating');
+        els.chatscreen.classList.remove('animating', 'screen-exit-to-right', 'active');
+        els.homepage.classList.remove('animating', 'screen-enter-from-left');
 
-        els.homepage.classList.add('screen-enter-from-left');
-        els.chatscreen.classList.add('screen-exit-to-right');
+        // Clean up chat state safely
+        cleanupUserPresence();
 
-        setTimeout(() => {
-            els.chatscreen.classList.remove('animating', 'screen-exit-to-right', 'active');
-            els.homepage.classList.remove('animating', 'screen-enter-from-left');
+        // Re-trigger quick fade for home if necessary
+        els.homepage.classList.add('quick-fade-in');
+        setTimeout(() => els.homepage.classList.remove('quick-fade-in'), 200);
 
-            // Clean up chat state safely
-            cleanupUserPresence();
-
-            // Re-trigger quick fade for home if necessary
-            els.homepage.classList.add('quick-fade-in');
-            setTimeout(() => els.homepage.classList.remove('quick-fade-in'), 300);
-
-            // Reset chat entrance classes
-            resetChatscreenEntrance();
-        }, 400);
-    }, 100);
+        // Reset chat entrance classes
+        resetChatscreenEntrance();
+    }, 280);
 }
 
 // ==========================================

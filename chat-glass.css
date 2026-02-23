@@ -148,7 +148,7 @@
 
 /* ───── CHATSCREEN BASE ───── */
 #chatscreen {
-    background: #0B141A;
+    background: #060D11;
     overflow: hidden;
 }
 
@@ -161,7 +161,7 @@
     bottom: 0;
     z-index: 0;
     /* Base gradient — slow vertical shift */
-    background: linear-gradient(170deg, #0B141A 0%, #0D1F2D 25%, #0A1A24 50%, #0F1B23 75%, #0B141A 100%);
+    background: linear-gradient(170deg, #060D11 0%, #081420 25%, #060E18 50%, #0A1219 75%, #060D11 100%);
     background-size: 100% 400%;
     animation: wallpaperGradient 30s ease-in-out infinite;
 }
