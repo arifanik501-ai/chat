@@ -12,6 +12,7 @@
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="chat-glass.css">
+    <link rel="stylesheet" href="themes.css">
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -54,6 +55,24 @@
             <div class="hp-content">
                 <!-- Glass Header -->
                 <div class="hp-glass-header" id="homeHeader">
+                    <div style="position: absolute; top: 16px; right: 16px; z-index: 10;">
+                        <button class="menu-btn ripple-effect-js"
+                            onclick="document.getElementById('homeThemeMenu').classList.toggle('show')">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                                <path fill="currentColor"
+                                    d="M12 7a5 5 0 1 0-.001-10.001A5 5 0 0 0 12 7zm0 2a5 5 0 1 0-.001 9.999A5 5 0 0 0 12 9zm0 12a5 5 0 1 0-.001 9.999A5 5 0 0 0 12 21z"
+                                    transform="translate(0, -2) scale(1.2)" />
+                                <!-- M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z backup -->
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu theme-menu" id="homeThemeMenu"
+                            style="top: 100%; right: 0; position: absolute; margin-top: 8px;">
+                            <div class="menu-item ripple-effect-js" onclick="setTheme('dark')">Dark Theme</div>
+                            <div class="menu-item ripple-effect-js" onclick="setTheme('light')">Lite Theme</div>
+                            <div class="menu-item ripple-effect-js" onclick="setTheme('green')">Green Theme</div>
+                        </div>
+                    </div>
+
                     <div class="hp-glass-reflection"></div>
                     <div class="hp-logo" id="homeLogo">
                         <svg viewBox="0 0 24 24" width="42" height="42" fill="currentColor">
@@ -270,11 +289,11 @@
 
             <!-- Three Dot Menu -->
             <div class="dropdown-menu" id="dropdownMenu" onclick="event.stopPropagation()">
-                <div class="menu-item ripple-effect-js">View Contact</div>
+                <div class="menu-item ripple-effect-js" onclick="openProfileModal()">View Contact</div>
                 <div class="menu-item ripple-effect-js">Media, links, and docs</div>
-                <div class="menu-item ripple-effect-js">Search</div>
-                <div class="menu-item ripple-effect-js">Mute notifications</div>
-                <div class="menu-item ripple-effect-js">Wallpaper</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('dark')">Dark Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('light')">Lite Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('green')">Green Theme</div>
                 <div class="menu-item ripple-effect-js" onclick="clearMessagesDialog()">Clear chat</div>
             </div>
 
@@ -439,6 +458,27 @@
                     <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
                 </svg>
                 <span>Delete</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Contact Name Edit Modal ── -->
+    <div id="contactNameModal" onclick="closeContactNameModal()"
+        style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
+        <div onclick="event.stopPropagation()"
+            style="background:rgba(255,255,255,0.97); border-radius:20px; padding:28px 24px; width:85%; max-width:360px; box-shadow:0 20px 60px rgba(0,0,0,0.3); font-family: 'Segoe UI', sans-serif; position:relative;">
+            <h3 style="margin:0 0 6px; font-size:18px; color:#111B21; font-weight:700;">Edit Contact Name</h3>
+            <p id="contactNameSubtitle" style="margin:0 0 20px; font-size:13px; color:#8696A0;">Editing name for <strong
+                    id="contactNameUser"></strong></p>
+            <input id="contactNameInput" type="text" maxlength="40"
+                style="width:100%; box-sizing:border-box; padding:12px 16px; border-radius:12px; border:2px solid #E9EDEF; font-size:16px; color:#111B21; background:#F0F2F5; outline:none; transition:border 0.2s;"
+                onfocus="this.style.borderColor='#25D366'" onblur="this.style.borderColor='#E9EDEF'"
+                placeholder="Enter new name…" onkeydown="if(event.key==='Enter') saveContactName()">
+            <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+                <button onclick="closeContactNameModal()"
+                    style="padding:10px 22px; border-radius:12px; border:none; background:#F0F2F5; color:#54656F; font-size:14px; font-weight:600; cursor:pointer;">Cancel</button>
+                <button onclick="saveContactName()"
+                    style="padding:10px 22px; border-radius:12px; border:none; background:linear-gradient(135deg,#11998E,#38EF7D); color:#fff; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 4px 15px rgba(56,239,125,0.35);">Save</button>
             </div>
         </div>
     </div>
