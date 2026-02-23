@@ -212,8 +212,7 @@ button:active {
 }
 
 /* Shadow removed — was causing extra paint layers and lag */
-}
-}
+
 
 /* =========================================
    PREMIUM HOMEPAGE — GLASSMORPHISM + LIQUID
@@ -1424,6 +1423,18 @@ button:active {
 .online-dot.show {
     transform: scale(1);
     animation: onlinePulse 2s infinite ease-in-out 0.3s;
+}
+
+@keyframes pulse-bg {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 83, 80, 0.6);
+        background-color: var(--wa-teal-green);
+    }
+
+    100% {
+        box-shadow: 0 0 0 12px rgba(239, 83, 80, 0);
+        background-color: #ef5350;
+    }
 }
 
 @keyframes onlinePulse {

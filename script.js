@@ -693,6 +693,72 @@ const synthPop = () => {
 };
 
 
+// ==========================================
+// 7e. VOICE RECORDING
+// ==========================================
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecordingAudio = false;
+let recordingStream = null;
+
+async function startAudioRecording() {
+    try {
+        recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(recordingStream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = event => {
+            if (event.data.size > 0) audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64Audio = reader.result;
+                synthPop(); // Play pop sound
+                sendMessage('', 'audio', base64Audio);
+            };
+            reader.readAsDataURL(audioBlob);
+
+            if (recordingStream) {
+                recordingStream.getTracks().forEach(track => track.stop());
+            }
+        };
+
+        mediaRecorder.start();
+        isRecordingAudio = true;
+
+        // Update UI to Stop icon mode
+        const micPath = document.querySelector('.action-icon-mic path');
+        if (micPath) {
+            micPath.setAttribute('d', 'M6 6h12v12H6z'); // Square stop icon
+            document.querySelector('.action-icon-mic').setAttribute('fill', '#ef5350'); // Red
+        }
+        els.sendBtn.style.animation = 'pulse-bg 1s infinite alternate';
+        showToast("Recording... Tap to stop and send", "");
+
+    } catch (err) {
+        console.error("Mic access denied:", err);
+        showToast("Microphone permission denied", "error");
+    }
+}
+
+function stopAudioRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        isRecordingAudio = false;
+
+        // Reset UI
+        const micPath = document.querySelector('.action-icon-mic path');
+        if (micPath) {
+            micPath.setAttribute('d', 'M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z');
+            document.querySelector('.action-icon-mic').setAttribute('fill', 'currentColor');
+        }
+        els.sendBtn.style.animation = 'none';
+    }
+}
+
 function handleSendAction() {
     if (els.sendBtn.classList.contains('send-mode')) {
         const text = els.messageInput.textContent.trim();
@@ -710,8 +776,12 @@ function handleSendAction() {
             setTypingStatus(false);
         }
     } else {
-        // Mic action placeholder
-        showToast("Hold to record audio (Demo)", "");
+        // Voice record toggle
+        if (!isRecordingAudio) {
+            startAudioRecording();
+        } else {
+            stopAudioRecording();
+        }
     }
 }
 
@@ -723,7 +793,7 @@ function sendMessage(text, type, imageUrl = '') {
         senderId: currentUserId,
         receiverId: otherUserId,
         text: type === 'text' ? text : '',
-        imageUrl: type === 'image' ? imageUrl : '',
+        imageUrl: type === 'image' ? imageUrl : (type === 'audio' ? imageUrl : ''),
         type: type,
         timestamp: firebase.database.ServerValue.TIMESTAMP,
         read: false
@@ -853,6 +923,8 @@ function appendMessageNode(msg, msgId, animate) {
         contentHtml = `<span class="text-content">${escapeHtml(msg.text)}</span>`;
     } else if (msg.type === 'image') {
         contentHtml = `<img src="${msg.imageUrl}" class="message-image" alt="Shared image" onload="this.classList.add('loaded')" onclick="openImagePreview('${msg.imageUrl}')">`;
+    } else if (msg.type === 'audio') {
+        contentHtml = `<audio controls src="${msg.imageUrl}" class="message-audio" style="width:230px; height:45px; margin-bottom:-5px; outline:none; border-radius:30px;"></audio>`;
     }
 
     let ticksHtml = '';
