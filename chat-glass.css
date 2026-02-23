@@ -499,6 +499,8 @@
 /* ───── MESSAGES AREA ───── */
 .chat-messages {
     flex: 1;
+    display: block !important;
+    /* Override flex from style.css which breaks scrolling */
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
