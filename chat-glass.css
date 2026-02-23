@@ -219,6 +219,18 @@
     background-size: 128px 128px;
 }
 
+/* ───── PERFORMANCE BOOST FOR TRANSITIONS ───── */
+/* Hide heavy SVG overlays and pause gradient animation during the sliding transition to save GPU */
+#chatscreen.animating .chat-wallpaper {
+    animation-play-state: paused !important;
+    will-change: transform;
+}
+
+#chatscreen.animating .chat-wallpaper::before,
+#chatscreen.animating .chat-wallpaper::after {
+    display: none !important;
+}
+
 /* ───── DEPTH FOG (Top & Bottom) ───── */
 .messages-top-glow {
     position: sticky;

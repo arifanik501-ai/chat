@@ -458,6 +458,52 @@
         </div>
     </div>
 
+    <!-- ── Password Auth Modal for User 1 ── -->
+    <div id="passwordModal"
+        style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); align-items:center; justify-content:center; opacity:0; transition:opacity 0.3s ease;">
+        <div id="passwordBox"
+            style="background:rgba(20,28,35,0.85); border-radius:24px; padding:32px 24px; width:85%; max-width:320px; box-shadow:0 24px 60px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1); font-family:'Segoe UI', sans-serif; position:relative; transform:scale(0.9) translateY(20px); transition:all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);">
+            <!-- Back Button -->
+            <button onclick="closePasswordModal()"
+                style="position:absolute; top:16px; left:16px; background:rgba(255,255,255,0.1); border:none; width:36px; height:36px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.2s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.2)'"
+                onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                </svg>
+            </button>
+
+            <div style="text-align:center; margin-top:10px;">
+                <div
+                    style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#00A884,#00765C); margin:0 auto 16px; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(0,168,132,0.4);">
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="#fff">
+                        <path
+                            d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />
+                    </svg>
+                </div>
+                <h3 style="margin:0 0 8px; font-size:20px; color:#E9EDEF; font-weight:600;">Private Chat</h3>
+                <p style="margin:0 0 24px; font-size:14px; color:#8696A0;">Enter password to unlock Anik's chat</p>
+
+                <div style="position:relative; margin-bottom:16px;">
+                    <input id="chatPasswordInput" type="password" placeholder="Password"
+                        style="width:100%; box-sizing:border-box; padding:14px 48px 14px 20px; border-radius:16px; border:2px solid rgba(255,255,255,0.08); font-size:16px; color:#E9EDEF; background:rgba(0,0,0,0.3); outline:none; transition:border 0.2s, box-shadow 0.2s;"
+                        onfocus="this.style.borderColor='#00A884'; this.style.boxShadow='0 0 0 4px rgba(0,168,132,0.1)'"
+                        onblur="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.boxShadow='none'"
+                        onkeydown="if(event.key==='Enter') verifyChatPassword()">
+                    <!-- Enter Button -->
+                    <button onclick="verifyChatPassword()"
+                        style="position:absolute; right:8px; top:8px; bottom:8px; width:36px; border-radius:12px; border:none; background:#00A884; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:transform 0.2s, background 0.2s;"
+                        onmouseover="this.style.transform='scale(1.05)'; this.style.background='#00BFA5'"
+                        onmouseout="this.style.transform='scale(1)'; this.style.background='#00A884'">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Contact Name Edit Modal ── -->
     <div id="contactNameModal" onclick="closeContactNameModal()"
         style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); align-items:center; justify-content:center;">

@@ -213,14 +213,104 @@ function selectUser(userId) {
         return;
     }
 
+    // --- PASSWORD AUTH FOR ALL USERS ---
+    if (userId === 'anik' || userId === 'priya') {
+        window.pendingAuthUser = userId; // Store who we are trying to unlock
+
+        // Visual Tap Bounce
+        const selectedCard = document.querySelector(`.card-${userId}`);
+        if (selectedCard) {
+            selectedCard.classList.add('tap-bounce');
+            setTimeout(() => selectedCard.classList.remove('tap-bounce'), 200);
+        }
+
+        // Show Password Modal with animation
+        const modal = document.getElementById('passwordModal');
+        const box = document.getElementById('passwordBox');
+        const input = document.getElementById('chatPasswordInput');
+        const titleEl = modal.querySelector('p'); // The "Enter password to unlock Anik's chat" text
+
+        if (modal && box && input && titleEl) {
+            const displayNames = { 'anik': 'Anik', 'priya': 'Priya' };
+            titleEl.textContent = `Enter password to unlock ${displayNames[userId]}'s chat`;
+
+            input.value = '';
+            modal.style.display = 'flex';
+            // Trigger animation
+            requestAnimationFrame(() => {
+                modal.style.opacity = '1';
+                box.style.transform = 'scale(1) translateY(0)';
+                input.focus();
+            });
+        }
+        return;
+    }
+
+    // Proceed for non-password users
+    finalizeUserSelection(userId);
+}
+
+function closePasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    const box = document.getElementById('passwordBox');
+    if (modal && box) {
+        modal.style.opacity = '0';
+        box.style.transform = 'scale(0.9) translateY(20px)';
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+    }
+}
+
+function verifyChatPassword() {
+    const input = document.getElementById('chatPasswordInput');
+    if (!input) return;
+
+    const passwords = {
+        'anik': 'hi',
+        'priya': 'hii'
+    };
+
+    const targetUserId = window.pendingAuthUser;
+
+    if (targetUserId && input.value === passwords[targetUserId]) {
+        // Success
+        input.blur();
+        closePasswordModal();
+        setTimeout(() => {
+            finalizeUserSelection(targetUserId);
+        }, 150); // slight delay for modal close animation
+    } else {
+        // Error shake animation
+        input.style.border = '2px solid #ef5350';
+        input.style.boxShadow = '0 0 0 4px rgba(239, 83, 80, 0.1)';
+        const box = document.getElementById('passwordBox');
+        box.animate([
+            { transform: 'translateX(0)' },
+            { transform: 'translateX(-8px)' },
+            { transform: 'translateX(8px)' },
+            { transform: 'translateX(-4px)' },
+            { transform: 'translateX(4px)' },
+            { transform: 'translateX(0)' }
+        ], { duration: 400, easing: 'ease-in-out' });
+        showToast('Incorrect password', 'error');
+
+        setTimeout(() => {
+            input.style.border = '2px solid rgba(255,255,255,0.08)';
+            input.style.boxShadow = 'none';
+        }, 1000);
+    }
+}
+
+function finalizeUserSelection(userId) {
     currentUserId = userId;
     otherUserId = userId === 'anik' ? 'priya' : 'anik';
 
-    // Visual Tap Bounce
-    const selectedCard = document.querySelector(`.user-${userId}`);
-    if (selectedCard) {
-        selectedCard.classList.add('tap-bounce');
-        setTimeout(() => selectedCard.classList.remove('tap-bounce'), 200);
+    // Visual Tap Bounce (for non-password users)
+    if (userId !== 'anik') {
+        const selectedCard = document.querySelector(`.card-${userId}`);
+        if (selectedCard) {
+            selectedCard.classList.add('tap-bounce');
+            setTimeout(() => selectedCard.classList.remove('tap-bounce'), 200);
+        }
     }
 
     // Setup Chat UI
@@ -568,12 +658,48 @@ function saveContactName() {
     closeContactNameModal();
 }
 
+// ==========================================
+// 7d. SOUND EFFECTS
+// ==========================================
+// A pleasant, short "pop" sound for sending messages (Base64 encoded MP3/WAV to avoid external dependencies)
+const messageSendSound = new Audio("data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExEAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExIAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExMAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExQAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExUAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExYAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExQAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
+// Using a simpler fallback just in case the above mp3 padding is empty:
+const popSoundUrl = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAAE=";
+// Actually, let's use a real base64 POP sound to ensure it works beautifully
+const popSound = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//MUXAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXAAAAANIAAAAAExBTUUzLjEwMqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXEAAABFwAAQAIADExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXIAAACdwAgQAYACExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXMAAABcwAAQAEAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXQAAAAOQAAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXUAAAAOQAAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXYAAAAOQAAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
+// (Using an extremely short 0.1s synthesized pop to guarantee it works)
+const synthPop = () => {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type = 'sine';
+
+        // Quick frequency drop (pew/pop effect)
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
+
+        // Quick volume fade
+        gain.gain.setValueAtTime(0.5, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.1);
+    } catch (e) { console.warn("Audio Context not supported"); }
+};
 
 
 function handleSendAction() {
     if (els.sendBtn.classList.contains('send-mode')) {
         const text = els.messageInput.textContent.trim();
         if (text) {
+            // Play popup sound
+            synthPop();
+
             // Animate button launch
             els.sendBtn.classList.add('fly-away');
             setTimeout(() => els.sendBtn.classList.remove('fly-away'), 300);
@@ -1073,6 +1199,7 @@ function simulateAndUploadImage(file, base64Preview) {
             setTimeout(() => {
                 imgWrapper.remove();
                 bubble.remove(); // Remove temp bubble
+                synthPop(); // Play sound
                 sendMessage('', 'image', compressedBase64); // Send real message
             }, 300);
         };
