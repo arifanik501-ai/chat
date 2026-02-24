@@ -10,8 +10,8 @@ const firebaseConfig = {
     measurementId: "G-TLN2LCLMXC"
 };
 
-// Users Configuration
-const USERS = {
+// Users Configuration (mutable for Firebase name sync)
+let USERS = {
     'anik': { id: 'anik', name: 'Anik', color: '#FF6B6B' },
     'priya': { id: 'priya', name: 'Priya', color: '#4FACFE' }
 };
@@ -146,9 +146,42 @@ function createRipple(event) {
 // 2. INITIALIZATION & ENTRANCE (Part B)
 // ==========================================
 window.onload = () => {
+    initTheme();
     initFirebase();
     triggerHomepageEntrance();
 };
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('whatsapp_theme') || 'light';
+    setTheme(savedTheme, false);
+}
+
+function setTheme(themeName, closeMenu = true) {
+    document.documentElement.setAttribute('data-theme', themeName);
+    localStorage.setItem('whatsapp_theme', themeName);
+
+    if (closeMenu) {
+        closeAllModals(); // Closes ALL dropdowns including theme and chat dropdown
+    }
+}
+
+// ── NEW THEME MENU TOGGLE ──
+function toggleThemeMenu(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('themePopupMenu');
+    // Toggle active state
+    if (menu.style.visibility === 'visible') {
+        menu.style.opacity = '0';
+        menu.style.visibility = 'hidden';
+        menu.style.transform = 'translateY(10px)';
+    } else {
+        closeAllModals(); // Close other menus first
+        menu.style.visibility = 'visible';
+        menu.style.opacity = '1';
+        menu.style.transform = 'translateY(0)';
+    }
+}
+
 
 function triggerHomepageEntrance() {
     if (!isFirstVisit) {
@@ -179,14 +212,104 @@ function selectUser(userId) {
         return;
     }
 
+    // --- PASSWORD AUTH FOR ALL USERS ---
+    if (userId === 'anik' || userId === 'priya') {
+        window.pendingAuthUser = userId; // Store who we are trying to unlock
+
+        // Visual Tap Bounce
+        const selectedCard = document.querySelector(`.card-${userId}`);
+        if (selectedCard) {
+            selectedCard.classList.add('tap-bounce');
+            setTimeout(() => selectedCard.classList.remove('tap-bounce'), 200);
+        }
+
+        // Show Password Modal with animation
+        const modal = document.getElementById('passwordModal');
+        const box = document.getElementById('passwordBox');
+        const input = document.getElementById('chatPasswordInput');
+        const titleEl = modal.querySelector('p'); // The "Enter password to unlock Anik's chat" text
+
+        if (modal && box && input && titleEl) {
+            const displayNames = { 'anik': 'Anik', 'priya': 'Priya' };
+            titleEl.textContent = `Enter password to unlock ${displayNames[userId]}'s chat`;
+
+            input.value = '';
+            modal.style.display = 'flex';
+            // Trigger animation
+            requestAnimationFrame(() => {
+                modal.style.opacity = '1';
+                box.style.transform = 'scale(1) translateY(0)';
+                input.focus();
+            });
+        }
+        return;
+    }
+
+    // Proceed for non-password users
+    finalizeUserSelection(userId);
+}
+
+function closePasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    const box = document.getElementById('passwordBox');
+    if (modal && box) {
+        modal.style.opacity = '0';
+        box.style.transform = 'scale(0.9) translateY(20px)';
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+    }
+}
+
+function verifyChatPassword() {
+    const input = document.getElementById('chatPasswordInput');
+    if (!input) return;
+
+    const passwords = {
+        'anik': 'hi',
+        'priya': 'hii'
+    };
+
+    const targetUserId = window.pendingAuthUser;
+
+    if (targetUserId && input.value === passwords[targetUserId]) {
+        // Success
+        input.blur();
+        closePasswordModal();
+        setTimeout(() => {
+            finalizeUserSelection(targetUserId);
+        }, 150); // slight delay for modal close animation
+    } else {
+        // Error shake animation
+        input.style.border = '2px solid #ef5350';
+        input.style.boxShadow = '0 0 0 4px rgba(239, 83, 80, 0.1)';
+        const box = document.getElementById('passwordBox');
+        box.animate([
+            { transform: 'translateX(0)' },
+            { transform: 'translateX(-8px)' },
+            { transform: 'translateX(8px)' },
+            { transform: 'translateX(-4px)' },
+            { transform: 'translateX(4px)' },
+            { transform: 'translateX(0)' }
+        ], { duration: 400, easing: 'ease-in-out' });
+        showToast('Incorrect password', 'error');
+
+        setTimeout(() => {
+            input.style.border = '2px solid rgba(255,255,255,0.08)';
+            input.style.boxShadow = 'none';
+        }, 1000);
+    }
+}
+
+function finalizeUserSelection(userId) {
     currentUserId = userId;
     otherUserId = userId === 'anik' ? 'priya' : 'anik';
 
-    // Visual Tap Bounce
-    const selectedCard = document.querySelector(`.user-${userId}`);
-    if (selectedCard) {
-        selectedCard.classList.add('tap-bounce');
-        setTimeout(() => selectedCard.classList.remove('tap-bounce'), 200);
+    // Visual Tap Bounce (for non-password users)
+    if (userId !== 'anik') {
+        const selectedCard = document.querySelector(`.card-${userId}`);
+        if (selectedCard) {
+            selectedCard.classList.add('tap-bounce');
+            setTimeout(() => selectedCard.classList.remove('tap-bounce'), 200);
+        }
     }
 
     // Setup Chat UI
@@ -195,13 +318,12 @@ function selectUser(userId) {
     els.chatHeaderAvatar.className = `chat-avatar avatar-${otherUserId}`;
     els.chatHeaderName.childNodes[0].textContent = otherUser.name + " ";
 
-    // Wait for card tap animation to finish (0.15s), then transition
-    setTimeout(() => {
-        transitionToChat();
-        setupFirebaseListeners();
-        setupUserPresence();
-    }, 150);
+    // Transition immediately — no pre-delay needed
+    transitionToChat();
+    setupFirebaseListeners();
+    setupUserPresence();
 }
+
 
 function transitionToChat() {
     // Both screens animating
@@ -213,40 +335,38 @@ function transitionToChat() {
     els.homepage.classList.add('screen-exit-to-left');
     els.chatscreen.classList.add('screen-enter-from-right');
 
-    // Clean up classes after animation (0.45s)
+    // Clean up classes after animation (0.28s)
     setTimeout(() => {
         els.homepage.classList.remove('animating', 'screen-exit-to-left', 'active');
         els.chatscreen.classList.remove('animating', 'screen-enter-from-right');
 
         triggerChatscreenEntrance();
-    }, 450);
+    }, 300);
 }
 
 function goBack() {
     els.backBtn.classList.add('bounce-back');
 
+    els.homepage.classList.add('animating', 'active');
+    els.chatscreen.classList.add('animating');
+
+    els.homepage.classList.add('screen-enter-from-left');
+    els.chatscreen.classList.add('screen-exit-to-right');
+
     setTimeout(() => {
-        els.homepage.classList.add('animating', 'active');
-        els.chatscreen.classList.add('animating');
+        els.chatscreen.classList.remove('animating', 'screen-exit-to-right', 'active');
+        els.homepage.classList.remove('animating', 'screen-enter-from-left');
 
-        els.homepage.classList.add('screen-enter-from-left');
-        els.chatscreen.classList.add('screen-exit-to-right');
+        // Clean up chat state safely
+        cleanupUserPresence();
 
-        setTimeout(() => {
-            els.chatscreen.classList.remove('animating', 'screen-exit-to-right', 'active');
-            els.homepage.classList.remove('animating', 'screen-enter-from-left');
+        // Re-trigger quick fade for home if necessary
+        els.homepage.classList.add('quick-fade-in');
+        setTimeout(() => els.homepage.classList.remove('quick-fade-in'), 200);
 
-            // Clean up chat state safely
-            cleanupUserPresence();
-
-            // Re-trigger quick fade for home if necessary
-            els.homepage.classList.add('quick-fade-in');
-            setTimeout(() => els.homepage.classList.remove('quick-fade-in'), 300);
-
-            // Reset chat entrance classes
-            resetChatscreenEntrance();
-        }, 400);
-    }, 100);
+        // Reset chat entrance classes
+        resetChatscreenEntrance();
+    }, 280);
 }
 
 // ==========================================
@@ -426,12 +546,225 @@ function initFirebase() {
         }, 2000);
     }
     showToast("Connected to Firebase", "success");
+
+    // Start listening for name changes
+    setupNameSync();
+}
+
+// ==========================================
+// 7b. REAL-TIME NAME SYNC FROM FIREBASE
+// ==========================================
+// Maps between app.js user IDs (user1/user2) and script.js user IDs (anik/priya)
+const USER_ID_MAP = { 'user1': 'anik', 'user2': 'priya' };
+
+function setupNameSync() {
+    if (!db) return;
+    const usersRef = db.ref('chat/users');
+
+    usersRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        // Update each user's name if it changed
+        Object.keys(USER_ID_MAP).forEach(fbKey => {
+            const scriptKey = USER_ID_MAP[fbKey];
+            if (data[fbKey] && data[fbKey].name && data[fbKey].name !== USERS[scriptKey].name) {
+                const newName = data[fbKey].name;
+                USERS[scriptKey].name = newName;
+
+                // Update homepage card
+                const cardH2 = document.querySelector(`.card-${scriptKey} .hp-card-info h2`);
+                if (cardH2) cardH2.textContent = newName;
+                const cardP = document.querySelector(`.card-${scriptKey} .hp-card-info p`);
+                if (cardP) cardP.textContent = `Tap to chat as ${newName}`;
+                const avatarDiv = document.querySelector(`.hp-avatar.avatar-${scriptKey}`);
+                if (avatarDiv) avatarDiv.textContent = newName.charAt(0);
+
+                // Update chat header if this user is the "other" user in the active chat
+                if (otherUserId === scriptKey && els.chatHeaderName) {
+                    els.chatHeaderName.childNodes[0].textContent = newName + " ";
+                    els.chatHeaderAvatar.textContent = newName.charAt(0);
+                }
+
+                console.log(`[NameSync] ${scriptKey} name updated to: ${newName}`);
+            }
+        });
+    });
+}
+
+// ==========================================
+// 7c. CONTACT NAME EDIT MODAL
+// ==========================================
+function openProfileModal() {
+    const modal = document.getElementById('contactNameModal');
+    const input = document.getElementById('contactNameInput');
+    const userLabel = document.getElementById('contactNameUser');
+    if (!modal) return;
+
+    // Show the modal to edit the OTHER user's name (since View Contact = the person you're chatting with)
+    const targetUserId = otherUserId; // e.g. 'priya'
+    userLabel.textContent = USERS[targetUserId]?.name || targetUserId;
+    input.value = USERS[targetUserId]?.name || '';
+
+    modal.style.display = 'flex';
+    closeAllModals(); // Close the dropdown first
+    setTimeout(() => {
+        modal.style.display = 'flex';
+        input.focus();
+        input.select();
+    }, 100);
+}
+
+function closeContactNameModal() {
+    const modal = document.getElementById('contactNameModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function saveContactName() {
+    const input = document.getElementById('contactNameInput');
+    const newName = input?.value.trim();
+    if (!newName) { showToast('Name cannot be empty', 'error'); return; }
+
+    const targetUserId = otherUserId; // 'anik' or 'priya'
+    const fbKeyMap = { 'anik': 'user1', 'priya': 'user2' };
+    const fbKey = fbKeyMap[targetUserId];
+
+    // Optimistic local update
+    USERS[targetUserId].name = newName;
+
+    // Update homepage card
+    const cardH2 = document.querySelector(`.card-${targetUserId} .hp-card-info h2`);
+    if (cardH2) cardH2.textContent = newName;
+    const cardP = document.querySelector(`.card-${targetUserId} .hp-card-info p`);
+    if (cardP) cardP.textContent = `Tap to chat as ${newName}`;
+    const avatarEl = document.querySelector(`.hp-avatar.avatar-${targetUserId}`);
+    if (avatarEl) avatarEl.textContent = newName.charAt(0);
+
+    // Update chat header
+    if (els.chatHeaderName) els.chatHeaderName.childNodes[0].textContent = newName + ' ';
+    if (els.chatHeaderAvatar) els.chatHeaderAvatar.textContent = newName.charAt(0);
+
+    // Push to Firebase so other device syncs
+    if (db && fbKey) {
+        const usersRef = db.ref('chat/users');
+        usersRef.child(fbKey).update({ name: newName })
+            .then(() => showToast(`Name updated to "${newName}"`, 'success'))
+            .catch(() => showToast('Failed to sync name', 'error'));
+    } else {
+        showToast(`Name updated to "${newName}"`, 'success');
+    }
+
+    closeContactNameModal();
+}
+
+// ==========================================
+// 7d. SOUND EFFECTS
+// ==========================================
+// A pleasant, short "pop" sound for sending messages (Base64 encoded MP3/WAV to avoid external dependencies)
+const messageSendSound = new Audio("data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExEAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExIAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExMAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExQAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExUAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExYAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExQAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
+// Using a simpler fallback just in case the above mp3 padding is empty:
+const popSoundUrl = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAAE=";
+// Actually, let's use a real base64 POP sound to ensure it works beautifully
+const popSound = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//MUXAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXAAAAANIAAAAAExBTUUzLjEwMqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXEAAABFwAAQAIADExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXIAAACdwAgQAYACExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXMAAABcwAAQAEAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXQAAAAOQAAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXUAAAAOQAAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MUXYAAAAOQAAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
+// (Using an extremely short 0.1s synthesized pop to guarantee it works)
+const synthPop = () => {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type = 'sine';
+
+        // Quick frequency drop (pew/pop effect)
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
+
+        // Quick volume fade
+        gain.gain.setValueAtTime(0.5, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.1);
+    } catch (e) { console.warn("Audio Context not supported"); }
+};
+
+
+// ==========================================
+// 7e. VOICE RECORDING
+// ==========================================
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecordingAudio = false;
+let recordingStream = null;
+
+async function startAudioRecording() {
+    try {
+        recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(recordingStream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = event => {
+            if (event.data.size > 0) audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64Audio = reader.result;
+                synthPop(); // Play pop sound
+                sendMessage('', 'audio', base64Audio);
+            };
+            reader.readAsDataURL(audioBlob);
+
+            if (recordingStream) {
+                recordingStream.getTracks().forEach(track => track.stop());
+            }
+        };
+
+        mediaRecorder.start();
+        isRecordingAudio = true;
+
+        // Update UI to Stop icon mode
+        const micPath = document.querySelector('.action-icon-mic path');
+        if (micPath) {
+            micPath.setAttribute('d', 'M6 6h12v12H6z'); // Square stop icon
+            document.querySelector('.action-icon-mic').setAttribute('fill', '#ef5350'); // Red
+        }
+        els.sendBtn.style.animation = 'pulse-bg 1s infinite alternate';
+        showToast("Recording... Tap to stop and send", "");
+
+    } catch (err) {
+        console.error("Mic access denied:", err);
+        showToast("Microphone permission denied", "error");
+    }
+}
+
+function stopAudioRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        isRecordingAudio = false;
+
+        // Reset UI
+        const micPath = document.querySelector('.action-icon-mic path');
+        if (micPath) {
+            micPath.setAttribute('d', 'M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z');
+            document.querySelector('.action-icon-mic').setAttribute('fill', 'currentColor');
+        }
+        els.sendBtn.style.animation = 'none';
+    }
 }
 
 function handleSendAction() {
     if (els.sendBtn.classList.contains('send-mode')) {
         const text = els.messageInput.textContent.trim();
         if (text) {
+            // Play popup sound
+            synthPop();
+
             // Animate button launch
             els.sendBtn.classList.add('fly-away');
             setTimeout(() => els.sendBtn.classList.remove('fly-away'), 300);
@@ -442,8 +775,12 @@ function handleSendAction() {
             setTypingStatus(false);
         }
     } else {
-        // Mic action placeholder
-        showToast("Hold to record audio (Demo)", "");
+        // Voice record toggle
+        if (!isRecordingAudio) {
+            startAudioRecording();
+        } else {
+            stopAudioRecording();
+        }
     }
 }
 
@@ -455,7 +792,7 @@ function sendMessage(text, type, imageUrl = '') {
         senderId: currentUserId,
         receiverId: otherUserId,
         text: type === 'text' ? text : '',
-        imageUrl: type === 'image' ? imageUrl : '',
+        imageUrl: type === 'image' ? imageUrl : (type === 'audio' ? imageUrl : ''),
         type: type,
         timestamp: firebase.database.ServerValue.TIMESTAMP,
         read: false
@@ -585,6 +922,8 @@ function appendMessageNode(msg, msgId, animate) {
         contentHtml = `<span class="text-content">${escapeHtml(msg.text)}</span>`;
     } else if (msg.type === 'image') {
         contentHtml = `<img src="${msg.imageUrl}" class="message-image" alt="Shared image" onload="this.classList.add('loaded')" onclick="openImagePreview('${msg.imageUrl}')">`;
+    } else if (msg.type === 'audio') {
+        contentHtml = `<audio controls src="${msg.imageUrl}" class="message-audio" style="width:230px; height:45px; margin-bottom:-5px; outline:none; border-radius:30px;"></audio>`;
     }
 
     let ticksHtml = '';
@@ -791,6 +1130,14 @@ function closeAllModals() {
     els.attachmentMenu.classList.remove('show');
     els.confirmDialog.classList.remove('show');
     els.attachBtn.classList.remove('active');
+
+    // Close theme menu if it exists
+    const themeMenu = document.getElementById('themePopupMenu');
+    if (themeMenu) {
+        themeMenu.style.visibility = 'hidden';
+        themeMenu.style.opacity = '0';
+        themeMenu.style.transform = 'translateY(10px)';
+    }
 }
 
 function clearMessagesDialog() {
@@ -931,6 +1278,7 @@ function simulateAndUploadImage(file, base64Preview) {
             setTimeout(() => {
                 imgWrapper.remove();
                 bubble.remove(); // Remove temp bubble
+                synthPop(); // Play sound
                 sendMessage('', 'image', compressedBase64); // Send real message
             }, 300);
         };
@@ -946,15 +1294,15 @@ function simulateAndUploadImage(file, base64Preview) {
 // ==========================================
 
 const EMOJIS = {
-    smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '🥲', '☺️', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗'],
-    gestures: ['👋', '🤚', '🖐', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍'],
-    animals: ['🐵', '🐒', '🦍', '🦧', '🐶', '🐕', '🦮', '🐕‍🦺', '🐩', '🐺', '🦊', '🦝', '🐱', '🐈', '🐈‍⬛', '🦁', '🐯', '🐅', '🐆', '🐴'],
-    food: ['🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑'],
-    activities: ['⚽️', '🏀', '🏈', '⚾️', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🪃', '🥅', '⛳️'],
-    travel: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🦯', '🦽', '🦼', '🛴', '🚲', '🛵'],
-    objects: ['⌚️', '📱', '📲', '💻', '⌨️', '🖥', '🖨', '🖱', '🖲', '🕹', '🗜', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥'],
-    symbols: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️'],
-    flags: ['🏳️', '🏴', '🏁', '🚩', '🏳️‍🌈', '🏳️‍⚧️', '🏴‍☠️', '🇦🇫', '🇦🇽', '🇦🇱', '🇩🇿', '🇦🇸', '🇦🇩', '🇦🇴', '🇦🇮', '🇦🇶', '🇦🇬', '🇦🇷', '🇦🇲', '🇦🇼']
+    smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '🥲', '☺️', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥸', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🫣', '🤭', '🫢', '🫡', '🤔', '🫣', '🤫', '🤥', '😶', '😶‍🌫️', '😐', '😑', '😬', '🫠', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '😵‍💫', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈', '👿', '👹', '👺', '🤡', '💩', '👻', '💀', '☠️', '👽', '👾', '🤖', '🎃', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'],
+    gestures: ['👋', '🤚', '🖐', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠', '🫀', '🫁', '🦷', '🦴', '👀', '👁', '👅', '👄', '💋', '🩸'],
+    animals: ['🐵', '🐒', '🦍', '🦧', '🐶', '🐕', '🦮', '🐕‍🦺', '🐩', '🐺', '🦊', '🦝', '🐱', '🐈', '🐈‍⬛', '🦁', '🐯', '🐅', '🐆', '🐴', '🐎', '🦄', '🦓', '🦌', '🦬', '🐮', '🐂', '🐃', '🐄', '🐷', '🐖', '🐗', '🐽', '🐏', '🐑', '🐐', '🐪', '🐫', '🦙', '🦒', '🐘', '🦣', '🦏', '🦛', '🐭', '🐁', '🐀', '🐹', '🐰', '🐇', '🐿', '🦫', '🦔', '🦇', '熊', '🐻', '🐨', '🐼', '🦥', '🦦', '🦨', '🦘', '🦡', '🐾', '🦃', '🐔', '🐓', '🐣', '🐤', '🐥', '🐦', '🐧', '🕊', '🦅', '🦆', '🦢', '🦉', '🦤', '🪶', '🦩', '🦚', '🦜', '🐸', '🐊', '🐢', '🦎', '🐍', '🐲', '🐉', '🦕', '🦖', '🐳', '🐋', '🐬', '🦭', '🐟', '🐠', '🐡', '🦈', '🐙', '🐚', '🐌', '🦋', '🐛', '🐜', '🐝', '🪲', '🐞', '🦗', '🪳', '🕷', '🕸', '🦂', '🦟', '🪰', '🪱', '🦠'],
+    food: ['🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶', '🫑', '🌽', '🥕', '🫒', '🧄', '🧅', '🥔', '🍠', '🥐', '🥯', '🍞', '🥖', '🥨', '🧀', '🥚', '🍳', '🧈', '🥞', '🧇', '🥓', '🥩', '🍗', '🍖', '🌭', '🍔', '🍟', '🍕', '🫓', '🥪', '🥙', '🧆', '🌮', '🌯', '🫔', '🥗', '🥘', '🫕', '🥫', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🥟', '🦪', '🍤', '🍙', '🍚', '🍘', '🍥', '🥠', '🥮', '🍢', '🍡', '🍧', '🍨', '🍦', '🥧', '🧁', '🍰', '🎂', '🍮', '🍭', '🍬', '🍫', '🍿', '🍩', '🍪', '🌰', '🥜', '🍯', '🥛', '🍼', '🫖', '☕️', '🍵', '🧃', '🥤', '🧋', '🍶', '🍺', '🍻', '🥂', '🍷', '🥃', '🍸', '🍹', '🧉', '🍾', '🧊', '🥄', '🍴', '🍽', '🥣', '🥡', '🥢', '🧂'],
+    activities: ['⚽️', '🏀', '🏈', '⚾️', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🪃', '🥅', '⛳️', '🪁', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹', '🛼', '🛷', '⛸', '🥌', '🎿', '⛷', '🏂', '🪂', '🏋️‍♀️', '🏋️', '🏋️‍♂️', '🤼‍♀️', '🤼', '🤼‍♂️', '🤸‍♀️', '🤸', '🤸‍♂️', '⛹️‍♀️', '⛹️', '⛹️‍♂️', '🤺', '🤾‍♀️', '🤾', '🤾‍♂️', '🏌️‍♀️', '🏌️', '🏌️‍♂️', '🏇', '🧘‍♀️', '🧘', '🧘‍♂️', '🏄‍♀️', '🏄', '🏄‍♂️', '🏊‍♀️', '🏊', '🏊‍♂️', '🤽‍♀️', '🤽', '🤽‍♂️', '🚣‍♀️', '🚣', '🚣‍♂️', '🧗‍♀️', '🧗', '🧗‍♂️', '🚴‍♀️', '🚴', '🚴‍♂️', '🚵‍♀️', '🚵', '🚵‍♂️', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖', '🏵', '🎗', '🎫', '🎟', '🎪', '🤹', '🤹‍♂️', '🤹‍♀️', '🎭', '🩰', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🪘', '🎷', '🎺', '🪗', '🎸', '🪕', '🎻', '🎲', '♟', '🎯', '🎳', '🎮', '🎰', '🧩'],
+    travel: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🦯', '🦽', '🦼', '🛴', '🚲', '🛵', '🏍', '🛺', '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋', '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉', '✈️', '🛫', '🛬', '🛩', '💺', '🛰', '🚀', '🛸', '🚁', '🛶', '⛵️', '🚤', '🛥', '🛳', '⛴', '🚢', '⚓️', '🪝', '⛽️', '🚧', '🚦', '🚥', '🚏', '🗺', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟', '🎡', '🎢', '🎠', '⛲️', '⛱', '🏖', '🏝', '🏜', '🌋', '⛰', '🏔', '🗻', '🏕', '⛺️', '🛖', '🏠', '🏡', '🏘', '🏚', '🏗', '🏭', '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩', '💒', '🏛', '⛪️', '🕌', '🕍', '🛕', '🕋', '⛩', '🛤', '🛣', '🗾', '🎑', '🏞', '🌅', '🌄', '🌠', '🎇', '🎆', '🌇', '🌆', '🏙', '🌃', '🌌', '🌉', '🌁'],
+    objects: ['⌚️', '📱', '📲', '💻', '⌨️', '🖥', '🖨', '🖱', '🖲', '🕹', '🗜', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽', '🎞', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙', '🎚', '🎛', '🧭', '⏱', '⏲', '⏰', '🕰', '⌛️', '⏳', '📡', '🔋', '🔌', '💡', '🔦', '🕯', '🪔', '🧯', '🛢', '💸', '💵', '💴', '💶', '💷', '🪙', '💰', '💳', '💎', '⚖️', '🪜', '🧰', '🪛', '🔧', '🔨', '⚒', '🛠', '⛏', '🪚', '🔩', '⚙️', '🪤', '🧱', '链', '🧲', '🔫', '💣', '🧨', '🪓', '🔪', '🗡', '⚔️', '盾', '🚬', '⚰️', '🪦', '⚱️', '🏺', '🔮', '📿', '🧿', '💈', '⚗️', '🔭', '🔬', '🕳', '🩹', '🩺', '💊', '💉', '🩸', '🧬', '🦠', '🧫', '🧪', '🌡', '🧹', '🪠', '🧺', '🧻', '🚽', '🚰', '🚿', '🛁', '🛀', '🧼', '🧽', '🪒', '🧴', '🛎', '🔑', '🗝', '🚪', '🪑', '🛋', '🛏', '🛌', '🧸', '🪆', '🖼', '🪞', '🪟', '🛍', '🛒', '🎁', '🎈', '🎏', '🎀', '🪄', '🪅', '🎊', '🎉', '🎎', '🏮', '🎐', '🧧', '✉️', '📩', '📨', '📧', '💌', '📥', '📤', '📦', '🏷', '🪧', '📪', '📫', '📬', '📭', '📮', '📯', '📜', '📃', '📄', '📑', '🧾', '📊', '📈', '📉', '🗒', '🗓', '📆', '📅', '🗑', '📇', '🗃', '🗳', '🗄', '📋', '📁', '📂', '🗂', '🗞', '📰', '📓', '📔', '📒', '📕', '📗', '📘', '📙', '📚', '📖', '🔖', '🧷', '🔗', '📎', '🖇', '📐', '📏', '🧮', '📌', '📍', '✂️', '🖊', '🖋', '✒️', '🖌', '🖍', '📝', '✏️', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓'],
+    symbols: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈️', '♉️', '♊️', '♋️', '♌️', '♍️', '♎️', '♏️', '♐️', '♑️', '♒️', '♓️', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚️', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕️', '🛑', '⛔️', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱', '🔞', '📵', '🚭', '❗️', '❕', '❓', '❔', '‼️', '⁉️', '🔅', '🔆', '〽️', '⚠️', '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯️', '💹', '❇️', '✳️', '❎', '🌐', '💠', 'Ⓜ️', '🌀', '💤', '🏧', '🚾', '♿️', '🅿️', '🛗', '🈳', '🈂️', '🛂', '🛃', '🛄', '🛅', '🚹', '🚺', '🚼', '⚧', '🚻', '🚮', '🎦', '📶', '🈁', '🔣', 'ℹ️', '🔤', '🔡', '🔠', '🆖', '🆗', '🆙', '🆒', '🆕', '🆓', '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟', '🔢', '#️⃣', '*️⃣', '⏏️', '▶️', '⏸', '⏯', '⏹', '⏺', '⏭', '⏮', '⏩', '⏪', '⏫', '⏬', '◀️', '🔼', '🔽', '➡️', '⬅️', '⬆️', '⬇️', '↗️', '↘️', '↙️', '↖️', '↕️', '↔️', '↪️', '↩️', '⤴️', '⤵️', '🔀', '🔁', '🔂', '🔄', '🔃', '🎵', '🎶', '➕', '➖', '➗', '✖️', '♾', '💲', '💱', '™️', '©️', '®️', '〰️', '➰', '➿', '🔚', '🔙', '🔛', '🔝', '🔜', '✔️', '☑️', '🔘', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚫️', '⚪️', '🟤', '🔺', '🔻', '🔸', '🔹', '🔶', '🔷', '🔳', '🔲', '▪️', '▫️', '◾️', '◽️', '◼️', '◻️', '🟥', '🟧', '🟨', '🟩', '🟦', '🟪', '⬛️', '⬜️', '🟫', '🔈', '🔇', '🔉', '🔊', '🔔', '🔕', '📣', '📢', '👁‍🗨', '💬', '💭', '🗯', '♠️', '♣️', '♥️', '♦️', '🃏', '🎴', '🀄️', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚', '🕛', '🕜', '🕝', '🕞', '🕟', '🕠', '🕡', '🕢', '🕣', '🕤', '🕥', '🕦', '🕧'],
+    flags: ['🏳️', '🏴', '🏁', '🚩', '🏳️‍🌈', '🏳️‍⚧️', '🏴‍☠️', '🇦🇫', '🇦🇽', '🇦🇱', '🇩🇿', '🇦🇸', '🇦🇩', '🇦🇴', '🇦🇮', '🇦🇶', '🇦🇬', '🇦🇷', '🇦🇲', '🇦🇼', '🇦🇺', '🇦🇹', '🇦🇿', '🇧🇸', '🇧🇭', '🇧🇩', '🇧🇧', '🇧🇾', '🇧🇪', '🇧🇿', '🇧🇯', '🇧🇲', '🇧🇹', '🇧🇴', '🇧🇦', '🇧🇼', '🇧🇷', '🇮🇴', '🇻🇬', '🇧🇳', '🇧🇬', '🇧🇫', '🇧🇮', '🇰🇭', '🇨🇲', '🇨🇦', '🇮🇨', '🇨🇻', '🇧🇶', '🇰🇾', '🇨🇫', '🇹🇩', '🇨🇱', '🇨🇳', '🇨🇽', '🇨🇨', '🇨🇴', '🇰🇲', '🇨🇬', '🇨🇩', '🇨🇰', '🇨🇷', '🇨🇮', '🇭🇷', '🇨🇺', '🇨🇼', '🇨🇾', '🇨🇿', '🇩🇰', '🇩🇯', '🇩🇲', '🇩🇴', '🇪🇨', '🇪🇬', '🇸🇻', '🇬🇶', '🇪🇷', '🇪🇪', '🇪🇹', '🇪🇺', '🇫🇰', '🇫🇴', '🇫🇯', '🇫🇮', '🇫🇷', '🇬🇫', '🇵🇫', '🇹🇫', '🇬🇦', '🇬🇲', '🇬🇪', '🇩🇪', '🇬🇭', '🇬🇮', '🇬🇷', '🇬🇱', '🇬🇩', '🇬🇵', '🇬🇺', '🇬🇹', '🇬🇬', '🇬🇳', '🇬🇼', '🇬🇾', '🇭🇹', '🇭🇳', '🇭🇰', '🇭🇺', '🇮🇸', '🇮🇳', '🇮🇩', '🇮🇷', '🇮🇶', '🇮🇪', '🇮🇲', '🇮🇱', '🇮🇹', '🇯🇲', '🇯🇵', '🎌', '🇯🇪', '🇯🇴', '🇰🇿', '🇰🇪', '🇰🇮', '🇽🇰', '🇰🇼', '🇰🇬', '🇱🇦', '🇱🇻', '🇱🇧', '🇱🇸', '🇱🇷', '🇱🇾', '🇱🇮', '🇱🇹', '🇱🇺', '🇲🇴', '🇲🇬', '🇲🇼', '🇲🇾', '🇲🇻', '🇲🇱', '🇲🇹', '🇲🇭', '🇲🇶', '🇲🇷', '🇲🇺', '🇾🇹', '🇲🇽', '🇫🇲', '🇲🇩', '🇲🇨', '🇲🇳', '🇲🇪', '🇲🇸', '🇲🇦', '🇲🇿', '🇲🇲', '🇳🇦', '🇳🇷', '🇳🇵', '🇳🇱', '🇳🇨', '🇳🇿', '🇳🇮', '🇳🇪', '🇳🇬', '🇳🇺', '🇳🇫', '🇰🇵', '🇲🇰', '🇲🇵', '🇳🇴', '🇴🇲', '🇵🇰', '🇵🇼', '🇵🇸', '🇵🇦', '🇵🇬', '🇵🇾', '🇵🇪', '🇵🇭', '🇵🇳', '🇵🇱', '🇵🇹', '🇵🇷', '🇶🇦', '🇷🇪', '🇷🇴', '🇷🇺', '🇷🇼', '🇼🇸', '🇸🇲', '🇸🇹', '🇸🇦', '🇸🇳', '🇷🇸', '🇸🇨', '🇸🇱', '🇸🇬', '🇸🇽', '🇸🇰', '🇸🇮', '🇬🇸', '🇸🇧', '🇸🇴', '🇿🇦', '🇰🇷', '🇸🇸', '🇪🇸', '🇱🇰', '🇧🇱', '🇸🇭', '🇰🇳', '🇱🇨', '🇵🇲', '🇻🇨', '🇸🇩', '🇸🇷', '🇸🇿', '🇸🇪', '🇨🇭', '🇸🇾', '🇹🇼', '🇹🇯', '🇹🇿', '🇹🇭', '🇹🇱', '🇹🇬', '🇹🇰', '🇹🇴', '🇹🇹', '🇹🇳', '🇹🇷', '🇹🇲', '🇹🇨', '🇹🇻', '🇻🇮', '🇺🇬', '🇺🇦', '🇦🇪', '🇬🇧', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🏴󠁧󠁢󠁳󠁣󠁴󠁿', '🏴󠁧󠁢󠁷󠁬󠁳󠁿', '🇺🇸', '🇺🇾', '🇺🇿', '🇻🇺', '🇻🇦', '🇻🇪', '🇻🇳', '🇼🇫', '🇪🇭', '🇾🇪', '🇿🇲', '🇿🇼']
 };
 
 let recentEmojis = JSON.parse(localStorage.getItem('whatsapp_recent_emojis')) || [];
@@ -1446,7 +1794,7 @@ document.addEventListener('DOMContentLoaded', generateHomepageParticles);
 
 // Global exposure
 Object.assign(window, {
-    selectUser, goBack, toggleMenu, toggleAttachmentMenu, closeAllModals,
+    setTheme, selectUser, goBack, toggleMenu, toggleAttachmentMenu, closeAllModals,
     clearMessagesDialog, executeClearChat, scrollToBottom, handleSendAction, handleImageSelection,
     toggleEmojiPicker, closeImagePreview, sendPreviewImage, openImagePreview, closeFullscreenViewer,
     downloadViewerImage, openDeviceCamera, handleContextDownload

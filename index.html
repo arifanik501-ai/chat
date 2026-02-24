@@ -1,433 +1,583 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>WhatsApp Clone</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600&display=swap"
-        rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#021A12">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>WhatsApp Clone Phase 2</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="chat-glass.css">
+    <link rel="stylesheet" href="themes.css">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 </head>
 
 <body>
-    <!-- Setup SVGs -->
-    <svg style="display:none;">
-        <symbol id="icon-sync" viewBox="0 0 24 24">
-            <path
-                d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
-        </symbol>
-        <symbol id="icon-back" viewBox="0 0 24 24">
-            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
-        </symbol>
-        <symbol id="icon-person" viewBox="0 0 24 24">
-            <path
-                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-        </symbol>
-        <symbol id="icon-videocam" viewBox="0 0 24 24">
-            <path
-                d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
-        </symbol>
-        <symbol id="icon-call" viewBox="0 0 24 24">
-            <path
-                d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z" />
-        </symbol>
-        <symbol id="icon-more" viewBox="0 0 24 24">
-            <path
-                d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-        </symbol>
-        <symbol id="icon-emoji" viewBox="0 0 24 24">
-            <path
-                d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 1.5 8.5 1.5zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z" />
-        </symbol>
-        <symbol id="icon-attach" viewBox="0 0 24 24">
-            <path
-                d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5a2.5 2.5 0 015 0v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-3.31-2.69-6-6-6S3 1.69 3 5v12.5c0 3.31 2.69 6 6 6s6-2.69 6-6V6h-1.5z" />
-        </symbol>
-        <symbol id="icon-camera" viewBox="0 0 24 24">
-            <path
-                d="M19 8C19 6.9 18.1 6 17 6H13.62C13.2 5 12.19 4 11 4C9.81 4 8.8 5 8.38 6H5C3.9 6 3 6.9 3 8V18C3 19.1 3.9 20 5 20H19C20.1 20 21 19.1 21 18V8H19ZM12 18C9.24 18 7 15.76 7 13C7 10.24 9.24 8 12 8C14.76 8 17 10.24 17 13C17 15.76 14.76 18 12 18ZM12 10C10.34 10 9 11.34 9 13C9 14.66 10.34 16 12 16C13.66 16 15 14.66 15 13C15 11.34 13.66 10 12 10Z" />
-        </symbol>
-        <symbol id="icon-mic" viewBox="0 0 24 24">
-            <path
-                d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-        </symbol>
-        <symbol id="icon-send" viewBox="0 0 24 24">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-        </symbol>
-        <symbol id="icon-down" viewBox="0 0 24 24">
-            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
-        </symbol>
-        <symbol id="icon-close" viewBox="0 0 24 24">
-            <path
-                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
-        </symbol>
-        <symbol id="icon-search" viewBox="0 0 24 24">
-            <path
-                d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-        </symbol>
-        <symbol id="icon-moon" viewBox="0 0 24 24">
-            <path
-                d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
-        </symbol>
-        <symbol id="icon-sun" viewBox="0 0 24 24">
-            <path
-                d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 0 0 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 0 0 0-1.41 .996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 0 0 0-1.41 .996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z" />
-        </symbol>
-        <symbol id="tick-single" viewBox="0 0 16 11">
-            <path d="M14.5 1.5l-8 8-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" />
-        </symbol>
-        <symbol id="tick-double" viewBox="0 0 22 11">
-            <path d="M15.5 1.5l-8 8-4-4 M20.5 1.5l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" />
-        </symbol>
-    </svg>
-
-
     <div id="app">
-        <!-- Theme Picker Overlay -->
-        <div id="theme-picker-overlay" class="theme-picker-overlay" onclick="closeThemePicker(event)">
-            <div class="theme-picker-panel" onclick="event.stopPropagation()">
-                <div class="theme-picker-header">
-                    <h3>Choose Theme</h3>
-                    <div class="theme-close-btn" onclick="closeThemePicker()">✕</div>
-                </div>
-                <div class="theme-grid" id="theme-grid">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-        </div>
+        <!-- GLOBAL TOAST CONTAINER -->
+        <div id="toastContainer" class="toast-container"></div>
 
-        <!-- Landing Page -->
-        <div id="landing-page">
-            <div class="landing-glass-card">
-                <div class="theme-toggle" onclick="openThemePicker()"
-                    style="position: absolute; top: 15px; left: 15px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.2); transition: background 0.3s;">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+        <!-- HOMEPAGE -->
+        <div id="homepage" class="screen active">
+            <!-- LAYER 0: Liquid Gradient Base -->
+            <div class="hp-liquid-bg"></div>
+
+            <!-- LAYER 1: Mesh Gradient Blobs -->
+            <div class="hp-mesh-blobs">
+                <div class="mesh-blob blob-a"></div>
+                <div class="mesh-blob blob-b"></div>
+                <div class="mesh-blob blob-c"></div>
+                <div class="mesh-blob blob-d"></div>
+                <div class="mesh-blob blob-e"></div>
+            </div>
+
+            <!-- LAYER 2: Particles (JS-generated) -->
+            <div class="hp-particles" id="particlesContainer"></div>
+
+            <!-- LAYER 3: Noise + Vignette -->
+            <div class="hp-noise-overlay"></div>
+            <div class="hp-vignette"></div>
+
+            <!-- LAYER 4: Decorative Liquid Blobs -->
+            <div class="hp-liquid-blob liquid-blob-1"></div>
+            <div class="hp-liquid-blob liquid-blob-2"></div>
+            <div class="hp-liquid-blob liquid-blob-3"></div>
+
+            <!-- LAYER 5: Main Content -->
+            <div class="hp-content">
+                <!-- Glass Header -->
+                <div class="hp-glass-header" id="homeHeader">
+                    <!-- Theme toggle moved to bottom-left -->
+
+
+                    <div class="hp-glass-reflection"></div>
+                    <div class="hp-logo" id="homeLogo">
+                        <svg viewBox="0 0 24 24" width="42" height="42" fill="currentColor">
+                            <path
+                                d="M12.01 2.06c-5.5 0-9.96 4.46-9.96 9.96 0 1.76.46 3.42 1.25 4.88L2 22l5.32-1.39A9.914 9.914 0 0012.01 22a9.96 9.96 0 000-19.94zm0 18.23c-1.47 0-2.88-.39-4.13-1.13l-.3-.18-3.07.8.82-3-.2-.31a8.216 8.216 0 01-1.35-4.47c0-4.54 3.7-8.24 8.23-8.24s8.24 3.7 8.24 8.24c0 4.54-3.7 8.24-8.24 8.24zm4.51-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.79.98-.15.17-.3.19-.55.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.88.86-.88 2.09 0 1.23.9 2.42 1.03 2.59.13.17 1.77 2.7 4.28 3.78 1.48.64 2.19.78 2.97.74.88-.04 2.01-.83 2.29-1.63.28-.8.28-1.49.2-1.63-.08-.15-.29-.24-.54-.36z" />
+                        </svg>
+                    </div>
+                    <h1 class="hp-title">WhatsApp</h1>
+                    <p class="hp-subtitle" id="homeWelcome">CHOOSE YOUR IDENTITY</p>
+                    <div class="hp-title-line"></div>
+                </div>
+
+                <!-- Glass Cards -->
+                <div class="hp-cards">
+                    <!-- Anik Card -->
+                    <div class="hp-glass-card card-anik" onclick="selectUser('anik')">
+                        <div class="hp-avatar-ring ring-anik">
+                            <div class="hp-avatar avatar-anik">A</div>
+                            <span class="hp-online-dot"></span>
+                        </div>
+                        <div class="hp-card-info">
+                            <h2>Anik</h2>
+                            <p>Tap to chat as Anik</p>
+                        </div>
+                        <span class="hp-card-arrow">›</span>
+                    </div>
+
+                    <!-- Priya Card -->
+                    <div class="hp-glass-card card-priya" onclick="selectUser('priya')">
+                        <div class="hp-avatar-ring ring-priya">
+                            <div class="hp-avatar avatar-priya">P</div>
+                            <span class="hp-online-dot"></span>
+                        </div>
+                        <div class="hp-card-info">
+                            <h2>Priya</h2>
+                            <p>Tap to chat as Priya</p>
+                        </div>
+                        <span class="hp-card-arrow">›</span>
+                    </div>
+                </div>
+
+
+
+            </div>
+
+            <!-- Theme Toggle Dropdown (Bottom Left) -->
+            <div class="hp-theme-container" style="position: absolute; bottom: 24px; left: 24px; z-index: 100;">
+                <!-- Main Toggle Button -->
+                <button class="hp-theme-btn ripple-effect-js" onclick="toggleThemeMenu(event)"
+                    style="width: 50px; height: 50px; border-radius: 50%; background: rgba(0,0,0,0.3); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.3); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
                         <path
-                            d="M12 22C6.49 22 2 17.51 2 12S6.49 2 12 2s10 4.04 10 9c0 3.31-2.69 6-6 6h-1.77c-.28 0-.5.22-.5.5 0 .12.05.23.13.33.41.47.64 1.06.64 1.67A2.5 2.5 0 0 1 12 22zm0-18c-4.41 0-8 3.59-8 8s3.59 8 8 8c.28 0 .5-.22.5-.5a.54.54 0 0 0-.14-.35c-.41-.46-.63-1.05-.63-1.65a2.5 2.5 0 0 1 2.5-2.5H16c2.21 0 4-1.79 4-4 0-3.86-3.59-7-8-7zm-5.5 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm3-4a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm3 4a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" />
+                            d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4c-.83 0-1.5-.67-1.5-1.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
                     </svg>
-                </div>
-                <div class="wa-logo-container">
-                    <svg viewBox="0 0 24 24">
-                        <path
-                            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                    </svg>
-                </div>
-                <h2>WhatsApp Web</h2>
-                <p class="subtitle">Select a user to start chatting.</p>
-                <div class="landing-title">Select Participants</div>
-                <button class="premium-btn user1-btn" onclick="handleUserSelection(event, 'user1')">
-                    <div class="btn-content">
-                        <img id="landing-dp-user1" src=""
-                            style="display:none; width:22px; height:22px; border-radius:50%; object-fit:cover;">
-                        <svg id="landing-svg-user1" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-                            <use href="#icon-person" />
-                        </svg>
-                        <span id="landing-name-user1">Anik</span>
-                    </div>
                 </button>
-                <button class="premium-btn user2-btn" onclick="handleUserSelection(event, 'user2')">
-                    <div class="btn-content">
-                        <img id="landing-dp-user2" src=""
-                            style="display:none; width:22px; height:22px; border-radius:50%; object-fit:cover;">
-                        <svg id="landing-svg-user2" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-                            <use href="#icon-person" />
+
+                <!-- Popup Menu -->
+                <div id="themePopupMenu" class="theme-popup-menu"
+                    style="position: absolute; bottom: 64px; left: 0; background: rgba(20,28,35,0.95); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.5); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; opacity: 0; visibility: hidden; transform: translateY(20px) scale(0.95); transform-origin: bottom left; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); min-width: 280px; z-index: 101;">
+
+                    <button class="theme-popup-item ripple-effect-js" onclick="setTheme('light')"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: none; background: rgba(255,255,255,0.05); color: #E9EDEF; border-radius: 12px; cursor: pointer; text-align: left; font-size: 14px; white-space: nowrap; transition: background 0.2s;">
+                        <span style="font-size:18px;">🌸</span> Lite
+                    </button>
+                    <button class="theme-popup-item ripple-effect-js" onclick="setTheme('dark')"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: none; background: rgba(255,255,255,0.05); color: #E9EDEF; border-radius: 12px; cursor: pointer; text-align: left; font-size: 14px; white-space: nowrap; transition: background 0.2s;">
+                        <span style="font-size:18px;">🌑</span> Dark
+                    </button>
+                    <button class="theme-popup-item ripple-effect-js" onclick="setTheme('green')"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: none; background: rgba(255,255,255,0.05); color: #E9EDEF; border-radius: 12px; cursor: pointer; text-align: left; font-size: 14px; white-space: nowrap; transition: background 0.2s;">
+                        <span style="font-size:18px;">🌿</span> Green
+                    </button>
+                    <button class="theme-popup-item ripple-effect-js" onclick="setTheme('basic')"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: none; background: rgba(255,255,255,0.05); color: #E9EDEF; border-radius: 12px; cursor: pointer; text-align: left; font-size: 14px; white-space: nowrap; transition: background 0.2s;">
+                        <span style="font-size:18px;">⬛</span> Basic
+                    </button>
+                    <button class="theme-popup-item ripple-effect-js" onclick="setTheme('ocean')"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: none; background: rgba(255,255,255,0.05); color: #E9EDEF; border-radius: 12px; cursor: pointer; text-align: left; font-size: 14px; white-space: nowrap; transition: background 0.2s;">
+                        <span style="font-size:18px;">🌊</span> Ocean
+                    </button>
+                    <button class="theme-popup-item ripple-effect-js" onclick="setTheme('sunset')"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: none; background: rgba(255,255,255,0.05); color: #E9EDEF; border-radius: 12px; cursor: pointer; text-align: left; font-size: 14px; white-space: nowrap; transition: background 0.2s;">
+                        <span style="font-size:18px;">🕷️</span> Spiderman
+                    </button>
+                    <button class="theme-popup-item ripple-effect-js" onclick="setTheme('midnight')"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: none; background: rgba(255,255,255,0.05); color: #E9EDEF; border-radius: 12px; cursor: pointer; text-align: left; font-size: 14px; white-space: nowrap; transition: background 0.2s;">
+                        <span style="font-size:18px;">🌃</span> Midnight
+                    </button>
+                    <button class="theme-popup-item ripple-effect-js" onclick="setTheme('forest')"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: none; background: rgba(255,255,255,0.05); color: #E9EDEF; border-radius: 12px; cursor: pointer; text-align: left; font-size: 14px; white-space: nowrap; transition: background 0.2s;">
+                        <span style="font-size:18px;">🌲</span> Forest
+                    </button>
+                    <button class="theme-popup-item ripple-effect-js" onclick="setTheme('cyber')"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: none; background: rgba(255,255,255,0.05); color: #E9EDEF; border-radius: 12px; cursor: pointer; text-align: left; font-size: 14px; white-space: nowrap; transition: background 0.2s;">
+                        <span style="font-size:18px;">🤖</span> Cyber
+                    </button>
+                    <button class="theme-popup-item ripple-effect-js" onclick="setTheme('coffee')"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: none; background: rgba(255,255,255,0.05); color: #E9EDEF; border-radius: 12px; cursor: pointer; text-align: left; font-size: 14px; white-space: nowrap; transition: background 0.2s;">
+                        <span style="font-size:18px;">☕</span> Coffee
+                    </button>
+                    <button class="theme-popup-item ripple-effect-js" onclick="setTheme('ios')"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: none; background: rgba(255,255,255,0.05); color: #E9EDEF; border-radius: 12px; cursor: pointer; text-align: left; font-size: 14px; white-space: nowrap; transition: background 0.2s; grid-column: span 2; justify-content: center;">
+                        <span style="font-size:18px;">📱</span> iOS 26 Glass
+                    </button>
+                </div>
+            </div>
+
+            <!-- Glow Spot behind cards -->
+            <div class="hp-glow-spot"></div>
+        </div>
+
+        <!-- CHAT SCREEN -->
+        <div id="chatscreen" class="screen">
+            <!-- Header -->
+            <header class="chat-header" id="chatHeader">
+                <div class="header-left" onclick="goBack()">
+                    <button class="back-btn ripple-effect-js" id="backBtn" aria-label="Back">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
                         </svg>
-                        <span id="landing-name-user2">BEHULA</span>
-                    </div>
-                </button>
-                <p class="helper-text">Choose one user for this device and another user on a separate device to start a
-                    conversation.</p>
-            </div>
-        </div>
-
-        <!-- Selection Popup Overlay -->
-        <div id="selection-popup-overlay" class="popup-overlay">
-            <div class="selection-popup-card">
-                <div class="popup-avatar">
-                    <svg viewBox="0 0 24 24" width="30" height="30" fill="white">
-                        <use href="#icon-person" />
-                    </svg>
-                </div>
-                <div class="popup-text">Establishing secure connection as <span id="popup-user-name">User</span>...
-                </div>
-            </div>
-        </div>
-
-        <!-- Password Prompt Modal -->
-        <div id="password-modal" class="popup-overlay" style="display: none;">
-            <div class="password-card">
-                <div class="password-title">Enter Password to Continue</div>
-                <div class="password-input-wrapper">
-                    <input type="password" id="anik-password" placeholder="Password"
-                        onkeydown="if(event.key === 'Enter') verifyPassword()">
-                    <button class="icon-btn" onclick="togglePasswordVisibility()"><svg id="eye-icon">
-                            <use href="#icon-videocam" />
-                        </svg></button>
-                </div>
-                <div class="password-error" id="password-error">Incorrect password</div>
-                <button class="submit-btn" onclick="verifyPassword()">Submit</button>
-                <button class="submit-btn" onclick="document.getElementById('password-modal').style.display='none'"
-                    style="background: transparent; color: #d9534f; border: 1px solid #d9534f; margin-top: 8px;">Exit</button>
-            </div>
-        </div>
-
-        <!-- Chat Page -->
-        <div id="chat-page">
-            <div id="conn-banner"></div>
-            <header>
-                <div class="header-left" onclick="showLanding()">
-                    <div class="back-btn"><svg>
-                            <use href="#icon-back" />
-                        </svg></div>
-                    <div class="avatar">
-                        <img id="chat-partner-dp" src=""
-                            style="display:none; width:40px; height:40px; border-radius:50%; object-fit:cover;">
-                        <svg id="chat-partner-svg">
-                            <use href="#icon-person" />
-                        </svg>
-                    </div>
-                    <div class="user-info">
-                        <span class="user-name" id="chat-partner-name">...</span>
-                        <div class="status-container">
-                            <span class="user-status" id="chat-partner-status">Waiting...</span>
-                            <div class="header-typing-indicator" id="header-typing" style="display: none;">
-                                <span>Typing</span>
-                                <div class="header-dot"></div>
-                                <div class="header-dot"></div>
-                                <div class="header-dot"></div>
-                            </div>
+                    </button>
+                    <div class="chat-avatar" id="chatHeaderAvatar"></div>
+                    <div class="chat-title-container">
+                        <span class="chat-title" id="chatHeaderName">
+                            Contact
+                            <span class="online-dot" id="onlineDot"></span>
+                        </span>
+                        <div class="chat-status-wrapper" id="chatStatusWrapper">
+                            <span class="chat-status slot-visible" id="chatHeaderStatus">connecting...</span>
+                            <span class="chat-status slot-hidden-down" id="chatHeaderStatusNext"></span>
                         </div>
                     </div>
                 </div>
                 <div class="header-right">
-                    <div class="header-icon" onclick="showToast('Coming soon')"><svg>
-                            <use href="#icon-videocam" />
-                        </svg></div>
-                    <div class="header-icon" onclick="showToast('Coming soon')"><svg>
-                            <use href="#icon-call" />
-                        </svg></div>
-                    <div class="header-icon" onclick="toggleMenu(event)"><svg>
-                            <use href="#icon-more" />
-                        </svg></div>
-                </div>
-                <!-- 3-dots Dropdown -->
-                <div class="dropdown" id="main-menu">
-                    <div class="dropdown-item" onclick="toggleTheme()">Dark Mode / Light Mode</div>
-                    <div class="dropdown-item" onclick="toggleSearchInput()">Search</div>
-                    <div class="dropdown-item" onclick="openProfileModal()">Profile Settings</div>
-                    <div class="dropdown-item" onclick="promptDeleteForMe()">Delete Messages for Me</div>
-                    <div class="dropdown-item" onclick="promptWallpaper()">Wallpaper</div>
-                    <div class="dropdown-item" onclick="showLanding()">Change User</div>
+                    <button class="menu-btn ripple-effect-js" id="menuBtn" aria-label="Menu"
+                        onclick="toggleMenu(event)">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path
+                                d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                        </svg>
+                    </button>
                 </div>
             </header>
 
-            <!-- Search Banner -->
-            <div id="search-banner" class="search-banner" style="display:none;">
-                <div class="search-input-wrapper">
-                    <svg class="search-icon">
-                        <use href="#icon-search" />
-                    </svg>
-                    <input type="text" id="chat-search-input" placeholder="Search messages..."
-                        oninput="handleSearch(event)">
-                    <div class="search-close" onclick="toggleSearchInput()"><svg>
-                            <use href="#icon-close" />
-                        </svg></div>
-                </div>
-            </div>
+            <!-- Wallpaper Background -->
+            <div class="chat-wallpaper" id="chatWallpaper"></div>
 
-            <!-- Pinned Message Banner -->
-            <div id="pinned-banner" class="pinned-banner" style="display:none;">
-                <div class="pinned-content" onclick="scrollToPinned()">
-                    <div class="pinned-title">Pinned Message</div>
-                    <div class="pinned-text" id="pinned-text">...</div>
-                </div>
-                <div class="pinned-close" onclick="unpinMessage(event)"><svg>
-                        <use href="#icon-close" />
-                    </svg></div>
-            </div>
+            <!-- Top Overscroll Glow -->
+            <div class="messages-top-glow" id="messagesTopGlow"></div>
 
-            <div id="chat-body" onscroll="handleScroll()">
-                <div class="encryption-banner">
-                    🔒 Messages are protected with end-to-end encryption. Only participants in this chat can read them.
-                </div>
-
-                <div id="empty-chat-state" class="empty-state" style="display: none;">
-                    <p>No messages yet.</p>
-                    <small>Start the conversation by sending your first message.</small>
-                </div>
-
-                <!-- Messages go here dynamically -->
-
-                <div class="typing-bubble" id="typing-indicator">
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                </div>
-            </div>
-
-            <!-- Scroll to Bottom Button -->
-            <div class="scroll-to-bottom" id="scroll-bottom" onclick="scrollToBottom(true)">
-                <svg>
-                    <use href="#icon-more" />
-                </svg>
-                <div class="unread-count" id="unread-badge">0</div>
-            </div>
-
-            <!-- Reaction Popup -->
-            <div id="reaction-popup" class="reaction-popup" style="display:none;">
-                <div class="reaction-emoji" onclick="addReaction('👍')">👍</div>
-                <div class="reaction-emoji" onclick="addReaction('❤️')">❤️</div>
-                <div class="reaction-emoji" onclick="addReaction('😂')">😂</div>
-                <div class="reaction-emoji" onclick="addReaction('😮')">😮</div>
-                <div class="reaction-emoji" onclick="addReaction('😢')">😢</div>
-                <div class="reaction-emoji" onclick="addReaction('🙏')">🙏</div>
-            </div>
-
-            <!-- Image Viewer Lightbox -->
-            <div id="image-viewer" class="image-viewer-overlay" onclick="closeImageViewer(event)">
-                <div class="image-viewer-header">
-                    <button class="iv-btn" onclick="closeImageViewer()">
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
-                            <use href="#icon-close" />
-                        </svg>
-                    </button>
-                    <button class="iv-btn" onclick="downloadViewerImage()">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="white">
-                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                        </svg>
-                    </button>
-                </div>
-                <img id="viewer-img" class="viewer-img" src="" alt="Preview" />
-            </div>
-
-            <div id="toast" class="toast">Notice</div>
-
-            <div id="undo-toast" class="undo-toast" style="display:none;">
-                <span>Message deleted</span>
-                <span class="undo-btn" id="undo-btn">Undo</span>
-            </div>
-
-            <!-- Context Menu items dialog -->
-            <div id="context-menu">
-                <div class="dropdown-item" onclick="handleReply()">Reply</div>
-                <div class="dropdown-item" onclick="handleCopy()">Copy</div>
-                <div class="dropdown-item" id="menu-pin-item" onclick="handlePinToggle()">Pin</div>
-                <div class="dropdown-item" onclick="handleDeletePrompt()">Delete</div>
-            </div>
-
-            <!-- Reply Preview Bar above Input -->
-            <div id="reply-preview">
-                <div class="reply-content">
-                    <div class="reply-sender-name" id="reply-name"></div>
-                    <div class="reply-text-preview" id="reply-text"></div>
-                </div>
-                <div class="close-reply" onclick="cancelReply()">
-                    <svg>
-                        <use href="#icon-close" />
-                    </svg>
-                </div>
-            </div>
-
-            <footer>
-                <div class="input-wrapper">
-                    <button class="icon-btn emoji-btn" onclick="toggleEmojiPanel()"><svg>
-                            <use href="#icon-emoji" />
-                        </svg></button>
-                    <textarea id="msg-input" rows="1" placeholder="Message" oninput="handleInput()"></textarea>
-                    <div class="action-container">
-                        <button class="camera-circle-btn" id="camera-btn"
-                            onclick="document.getElementById('image-upload').click()"><svg viewBox="0 0 24 24"
-                                width="20" height="20" fill="white">
-                                <use href="#icon-camera" />
-                            </svg></button>
-                        <input type="file" id="image-upload" accept="image/*" style="display:none;"
-                            onchange="handleImageUpload(event)">
+            <!-- Messages Area -->
+            <main class="chat-messages" id="messagesArea">
+                <div class="messages-container" id="messagesContainer">
+                    <div class="skeleton-loader" id="skeletonLoader">
+                        <div class="skeleton-bubble left w60"></div>
+                        <div class="skeleton-bubble right w50"></div>
+                        <div class="skeleton-bubble left w70"></div>
+                        <div class="skeleton-bubble right w45"></div>
                     </div>
                 </div>
-                <button class="send-btn" id="send-btn" onclick="sendMessage()">
-                    <svg id="send-icon">
-                        <use href="#icon-mic" />
+
+                <!-- Scroll to Bottom Floating Button -->
+                <button class="scroll-bottom-btn ripple-effect-js" id="scrollBottomBtn" onclick="scrollToBottom(true)">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                        <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z" />
+                    </svg>
+                    <span class="unread-badge" id="unreadBadge">0</span>
+                </button>
+            </main>
+
+            <!-- Input Area -->
+            <footer class="chat-input-area" id="chatInputArea">
+                <div class="input-container" id="inputContainer">
+                    <button class="emoji-btn ripple-effect-js" id="emojiBtn" aria-label="Emoji"
+                        onclick="toggleEmojiPicker()">
+                        <div class="emoji-icon-container">
+                            <!-- Smiley -->
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="icon-smiley">
+                                <path
+                                    d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z" />
+                            </svg>
+                            <!-- Keyboard -->
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="icon-keyboard">
+                                <path
+                                    d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z" />
+                            </svg>
+                        </div>
+                    </button>
+
+                    <div id="messageInput" class="message-input" contenteditable="true"
+                        data-placeholder="Type a message..."></div>
+
+                    <button class="attach-btn ripple-effect-js" id="attachBtn" aria-label="Attach"
+                        onclick="toggleAttachmentMenu(event)">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path
+                                d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5a2.5 2.5 0 0 1 5 0v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5a2.5 2.5 0 0 0 5 0V5c0-3.31-2.69-6-6-6S3 1.69 3 5v12.5c0 3.86 3.14 7 7 7s7-3.14 7-7V6h-1.5z">
+                            </path>
+                        </svg>
+                    </button>
+
+                    <button class="camera-btn ripple-effect-js" aria-label="Camera" onclick="openDeviceCamera()">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path
+                                d="M4 4h3l2-2h6l2 2h3c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm8 3c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z" />
+                        </svg>
+                        <input type="file" id="cameraInput" accept="image/*" capture="environment"
+                            style="display: none;" onchange="handleImageSelection(event)">
+                    </button>
+                </div>
+
+                <button class="action-btn-container ripple-effect-js" id="sendBtn" onclick="handleSendAction()">
+                    <!-- Microphone -->
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="action-icon-mic">
+                        <path
+                            d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z" />
+                    </svg>
+                    <!-- Send -->
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="action-icon-send">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
                     </svg>
                 </button>
             </footer>
-            <!-- Emoji Panel -->
-            <div id="emoji-panel" style="display:none;">
-                <div class="emoji-categories">
-                    <div class="emoji-cat active-cat" onclick="loadEmojis('smileys')">😀</div>
-                    <div class="emoji-cat" onclick="loadEmojis('animals')">🐶</div>
-                    <div class="emoji-cat" onclick="loadEmojis('food')">🍔</div>
-                    <div class="emoji-cat" onclick="loadEmojis('sports')">⚽</div>
-                    <div class="emoji-cat" onclick="loadEmojis('travel')">🚗</div>
-                    <div class="emoji-cat" onclick="loadEmojis('objects')">💡</div>
-                    <div class="emoji-cat" onclick="loadEmojis('symbols')">❤️</div>
+
+            <!-- Emoji Picker Panel -->
+            <div class="emoji-picker-panel" id="emojiPickerPanel">
+                <div class="emoji-tabs">
+                    <button class="emoji-tab ripple-effect-js active" data-category="recent">🕐</button>
+                    <button class="emoji-tab ripple-effect-js" data-category="smileys">😊</button>
+                    <button class="emoji-tab ripple-effect-js" data-category="gestures">👋</button>
+                    <button class="emoji-tab ripple-effect-js" data-category="animals">🐾</button>
+                    <button class="emoji-tab ripple-effect-js" data-category="food">🍔</button>
+                    <button class="emoji-tab ripple-effect-js" data-category="activities">⚽</button>
+                    <button class="emoji-tab ripple-effect-js" data-category="travel">✈️</button>
+                    <button class="emoji-tab ripple-effect-js" data-category="objects">💡</button>
+                    <button class="emoji-tab ripple-effect-js" data-category="symbols">❤️</button>
+                    <button class="emoji-tab ripple-effect-js" data-category="flags">🏳️</button>
+                    <div class="emoji-tab-indicator" id="emojiTabIndicator"></div>
                 </div>
-                <div class="emoji-grid" id="emoji-grid">
-                    <!-- Emojis populated by JS -->
+
+                <div class="emoji-search-container">
+                    <div class="emoji-search-bar">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path
+                                d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                        </svg>
+                        <input type="text" id="emojiSearchInput" placeholder="Search emoji" autocomplete="off">
+                    </div>
                 </div>
+
+                <div class="emoji-scroll-area" id="emojiScrollArea">
+                    <div class="emoji-no-results" id="emojiNoResults" style="display: none;">
+                        <span class="sad-emoji">😕</span>
+                        <p>No emoji found</p>
+                    </div>
+                    <!-- Dynamically populated by JS -->
+                </div>
+            </div>
+
+            <!-- Emoji Skin Tone Popup -->
+            <div class="skin-tone-popup" id="skinTonePopup">
+                <!-- Dynamically populated -->
             </div>
         </div>
 
-        <!-- Toast & Overlays -->
-        <div id="toast"></div>
+        <!-- UI OVERLAYS & MODALS -->
+        <div class="blur-overlay" id="blurOverlay" onclick="closeAllModals()">
 
-        <!-- Dialog Overlay -->
-        <div class="overlay" id="dialog-overlay" onclick="closeDialog(event)">
-            <div class="dialog" id="dialog-box" onclick="event.stopPropagation()">
-                <div class="dialog-title" id="dialog-title">Title</div>
-                <div id="dialog-body">Content</div>
-                <div class="dialog-actions" id="dialog-actions">
-                    <button class="dialog-btn" onclick="closeDialog()">Cancel</button>
+            <!-- Three Dot Menu -->
+            <div class="dropdown-menu" id="dropdownMenu" onclick="event.stopPropagation()"
+                style="max-height: 400px; overflow-y: auto;">
+                <div class="menu-item ripple-effect-js" onclick="openProfileModal()">View Contact</div>
+                <div class="menu-item ripple-effect-js">Media, links, and docs</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('light')">🌸 Lite Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('dark')">🌑 Dark Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('green')">🌿 Green Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('basic')">⬛ Basic Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('ocean')">🌊 Ocean Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('sunset')">🕷️ Spiderman Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('midnight')">🌃 Midnight Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('forest')">🌲 Forest Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('cyber')">🤖 Cyber Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('coffee')">☕ Coffee Theme</div>
+                <div class="menu-item ripple-effect-js" onclick="setTheme('ios')">📱 iOS 26 Glass</div>
+                <div class="menu-item ripple-effect-js" onclick="clearMessagesDialog()">Clear chat</div>
+            </div>
+
+            <!-- Confirm Dialog -->
+            <div class="dialog-box" id="confirmDialog" onclick="event.stopPropagation()">
+                <h3>Clear this chat?</h3>
+                <p>Messages will be removed from this device.</p>
+                <div class="dialog-actions">
+                    <button class="dialog-btn cancel-btn ripple-effect-js" onclick="closeAllModals()">Cancel</button>
+                    <button class="dialog-btn delete-btn ripple-effect-js" onclick="executeClearChat()">Clear
+                        chat</button>
                 </div>
             </div>
+
         </div>
 
-        <!-- Profile Settings Modal -->
-        <div id="profile-modal" class="popup-overlay" style="display: none; z-index: 2000;">
-            <div class="dialog">
-                <h3 class="dialog-title">Profile Settings</h3>
-                <div style="display:flex; flex-direction:column; align-items:center; gap:15px; margin-bottom: 20px;">
-                    <label for="dp-upload"
-                        style="cursor:pointer; display:flex; flex-direction:column; align-items:center;">
-                        <img id="profile-dp-preview" src=""
-                            style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; background: #eee; border: 2px solid #00A884; display: none;" />
-                        <div id="profile-dp-placeholder"
-                            style="width: 100px; height: 100px; border-radius: 50%; background: #ece5dd; display: flex; align-items:center; justify-content:center; color:#8696a0;">
-                            <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
-                                <use href="#icon-camera" />
+        <div class="blur-overlay no-blur" id="transparentOverlay" onclick="closeAllModals()">
+            <!-- Attachment Menu -->
+            <div class="attachment-menu" id="attachmentMenu">
+                <div class="attach-grid">
+                    <label class="attach-option">
+                        <div class="attach-icon-wrapper" style="background:#B663F0">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                                <path
+                                    d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z" />
                             </svg>
                         </div>
-                        <span style="font-size:14px; color:#00A884; margin-top:8px;">Change Photo</span>
+                        <span>Gallery</span>
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;"
+                            onchange="handleImageSelection(event)">
                     </label>
-                    <input type="file" id="dp-upload" accept="image/*" style="display:none;"
-                        onchange="handleDPSelect(event)">
-
-                    <input type="text" id="profile-name-input" placeholder="Your Name"
-                        style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; outline: none; font-size: 16px; background: transparent; color: inherit;">
                 </div>
-                <div style="display: flex; justify-content: flex-end; gap: 15px;">
-                    <button class="dialog-btn" onclick="closeProfileModal()">Cancel</button>
-                    <button class="dialog-btn" style="color: #00A884; font-weight: bold;"
-                        onclick="saveProfile()">Save</button>
+            </div>
+        </div>
+
+        <!-- Image Preview Modal -->
+        <div class="preview-modal" id="previewModal">
+            <header class="preview-header">
+                <button class="close-preview-btn ripple-effect-js" onclick="closeImagePreview()">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                </button>
+                <div class="preview-header-actions">
+                    <button class="preview-action-btn ripple-effect-js">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path
+                                d="M17 15h2V7c0-1.1-.9-2-2-2H9v2h8v8zM7 17V1H5v4H1v2h4v10c0 1.1.9 2 2 2h10v4h2v-4h4v-2H7z" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <div class="preview-image-container">
+                <div class="preview-compressing-text" id="previewCompressingText">Compressing...</div>
+                <img src="" id="previewImage" class="preview-main-image">
+            </div>
+
+            <footer class="preview-footer">
+                <div class="thumbnail-strip-container" id="thumbnailStripContainer" style="display: none;">
+                    <!-- Thumbnails populated here if multiple images -->
+                </div>
+                <div class="caption-input-container">
+                    <span class="caption-char-count" id="captionCharCount">0 / 1024</span>
+                    <input type="text" id="captionInput" class="caption-input" placeholder="Add a caption..."
+                        autocomplete="off">
+                </div>
+                <!-- Send/Progress Button -->
+                <button class="preview-send-btn ripple-effect-js" id="previewSendBtn" onclick="sendPreviewImage()">
+                    <!-- Send Arrow -->
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="send-arrow"
+                        id="previewSendArrow">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                    </svg>
+
+                    <!-- Progress SVG (hidden initially) -->
+                    <svg class="preview-progress-ring" id="previewProgressRing" viewBox="0 0 40 40"
+                        style="display: none;">
+                        <circle class="ring-bg" cx="20" cy="20" r="18"></circle>
+                        <circle class="ring-progress" id="previewProgressCircle" cx="20" cy="20" r="18"></circle>
+                    </svg>
+                    <span class="preview-progress-text" id="previewProgressText" style="display: none;">0%</span>
+
+                    <!-- Cancel Stop Icon (hidden initially) -->
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="cancel-upload-icon"
+                        id="previewCancelIcon" style="display: none;">
+                        <path d="M6 6h12v12H6z" />
+                    </svg>
+                </button>
+            </footer>
+        </div>
+
+        <!-- Fullscreen Image Viewer -->
+        <div class="fullscreen-viewer" id="fullscreenViewer">
+            <header class="viewer-header" id="viewerHeader">
+                <button class="viewer-nav-btn ripple-effect-js" onclick="closeFullscreenViewer()">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                    </svg>
+                </button>
+                <div class="viewer-info">
+                    <span class="viewer-name" id="viewerName">Contact Name</span>
+                    <span class="viewer-time" id="viewerTime">12:30 PM</span>
+                </div>
+                <div class="viewer-actions">
+                    <button class="viewer-action-btn ripple-effect-js">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path
+                                d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                        </svg>
+                    </button>
+                    <button class="viewer-action-btn ripple-effect-js" id="viewerDownloadBtn"
+                        onclick="downloadViewerImage()">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                        </svg>
+                    </button>
+                    <button class="viewer-action-btn ripple-effect-js">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path
+                                d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <div class="viewer-image-track" id="viewerImageTrack">
+                <!-- Shared element clone target -->
+                <img src="" id="viewerMainImage" class="viewer-image">
+            </div>
+
+            <footer class="viewer-footer" id="viewerFooter">
+                <div class="viewer-caption" id="viewerCaption"></div>
+                <div class="viewer-thumbnails" id="viewerThumbnails"></div>
+            </footer>
+        </div>
+
+        <!-- Long Press Context Menu -->
+        <div class="context-menu" id="messageContextMenu">
+            <div class="menu-item ripple-effect-js" onclick="handleContextDownload()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                </svg>
+                <span>Save</span>
+            </div>
+            <div class="menu-item ripple-effect-js">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path
+                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+                <span>Star</span>
+            </div>
+            <div class="menu-item ripple-effect-js">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z" />
+                </svg>
+                <span>Forward</span>
+            </div>
+            <div class="menu-item ripple-effect-js context-delete" id="contextDeleteBtn">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                </svg>
+                <span>Delete</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Password Auth Modal for User 1 ── -->
+    <div id="passwordModal"
+        style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); align-items:center; justify-content:center; opacity:0; transition:opacity 0.3s ease;">
+        <div id="passwordBox"
+            style="background:rgba(20,28,35,0.85); border-radius:24px; padding:32px 24px; width:85%; max-width:320px; box-shadow:0 24px 60px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1); font-family:'Segoe UI', sans-serif; position:relative; transform:scale(0.9) translateY(20px); transition:all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);">
+            <!-- Back Button -->
+            <button onclick="closePasswordModal()"
+                style="position:absolute; top:16px; left:16px; background:rgba(255,255,255,0.1); border:none; width:36px; height:36px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.2s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.2)'"
+                onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                </svg>
+            </button>
+
+            <div style="text-align:center; margin-top:10px;">
+                <div
+                    style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#00A884,#00765C); margin:0 auto 16px; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(0,168,132,0.4);">
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="#fff">
+                        <path
+                            d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />
+                    </svg>
+                </div>
+                <h3 style="margin:0 0 8px; font-size:20px; color:#E9EDEF; font-weight:600;">Private Chat</h3>
+                <p style="margin:0 0 24px; font-size:14px; color:#8696A0;">Enter password to unlock Anik's chat</p>
+
+                <div style="position:relative; margin-bottom:16px;">
+                    <input id="chatPasswordInput" type="password" placeholder="Password"
+                        style="width:100%; box-sizing:border-box; padding:14px 48px 14px 20px; border-radius:16px; border:2px solid rgba(255,255,255,0.08); font-size:16px; color:#E9EDEF; background:rgba(0,0,0,0.3); outline:none; transition:border 0.2s, box-shadow 0.2s;"
+                        onfocus="this.style.borderColor='#00A884'; this.style.boxShadow='0 0 0 4px rgba(0,168,132,0.1)'"
+                        onblur="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.boxShadow='none'"
+                        onkeydown="if(event.key==='Enter') verifyChatPassword()">
+                    <!-- Enter Button -->
+                    <button onclick="verifyChatPassword()"
+                        style="position:absolute; right:8px; top:8px; bottom:8px; width:36px; border-radius:12px; border:none; background:#00A884; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:transform 0.2s, background 0.2s;"
+                        onmouseover="this.style.transform='scale(1.05)'; this.style.background='#00BFA5'"
+                        onmouseout="this.style.transform='scale(1)'; this.style.background='#00A884'">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Audio Base64 placeholder -->
-    <audio id="notif-sound" preload="auto">
-        <!-- Short pop sound base64 -->
-    </audio>
+    <!-- ── Contact Name Edit Modal ── -->
+    <div id="contactNameModal" onclick="closeContactNameModal()"
+        style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
+        <div onclick="event.stopPropagation()"
+            style="background:rgba(255,255,255,0.97); border-radius:20px; padding:28px 24px; width:85%; max-width:360px; box-shadow:0 20px 60px rgba(0,0,0,0.3); font-family: 'Segoe UI', sans-serif; position:relative;">
+            <h3 style="margin:0 0 6px; font-size:18px; color:#111B21; font-weight:700;">Edit Contact Name</h3>
+            <p id="contactNameSubtitle" style="margin:0 0 20px; font-size:13px; color:#8696A0;">Editing name for <strong
+                    id="contactNameUser"></strong></p>
+            <input id="contactNameInput" type="text" maxlength="40"
+                style="width:100%; box-sizing:border-box; padding:12px 16px; border-radius:12px; border:2px solid #E9EDEF; font-size:16px; color:#111B21; background:#F0F2F5; outline:none; transition:border 0.2s;"
+                onfocus="this.style.borderColor='#25D366'" onblur="this.style.borderColor='#E9EDEF'"
+                placeholder="Enter new name…" onkeydown="if(event.key==='Enter') saveContactName()">
+            <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+                <button onclick="closeContactNameModal()"
+                    style="padding:10px 22px; border-radius:12px; border:none; background:#F0F2F5; color:#54656F; font-size:14px; font-weight:600; cursor:pointer;">Cancel</button>
+                <button onclick="saveContactName()"
+                    style="padding:10px 22px; border-radius:12px; border:none; background:linear-gradient(135deg,#11998E,#38EF7D); color:#fff; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 4px 15px rgba(56,239,125,0.35);">Save</button>
+            </div>
+        </div>
+    </div>
 
-    <script src="app.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>

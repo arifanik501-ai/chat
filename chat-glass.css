@@ -148,7 +148,7 @@
 
 /* ───── CHATSCREEN BASE ───── */
 #chatscreen {
-    background: #0B141A;
+    background: #060D11;
     overflow: hidden;
 }
 
@@ -161,7 +161,7 @@
     bottom: 0;
     z-index: 0;
     /* Base gradient — slow vertical shift */
-    background: linear-gradient(170deg, #0B141A 0%, #0D1F2D 25%, #0A1A24 50%, #0F1B23 75%, #0B141A 100%);
+    background: linear-gradient(170deg, #060D11 0%, #081420 25%, #060E18 50%, #0A1219 75%, #060D11 100%);
     background-size: 100% 400%;
     animation: wallpaperGradient 30s ease-in-out infinite;
 }
@@ -217,6 +217,18 @@
     pointer-events: none;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 128px 128px;
+}
+
+/* ───── PERFORMANCE BOOST FOR TRANSITIONS ───── */
+/* Hide heavy SVG overlays and pause gradient animation during the sliding transition to save GPU */
+#chatscreen.animating .chat-wallpaper {
+    animation-play-state: paused !important;
+    will-change: transform;
+}
+
+#chatscreen.animating .chat-wallpaper::before,
+#chatscreen.animating .chat-wallpaper::after {
+    display: none !important;
 }
 
 /* ───── DEPTH FOG (Top & Bottom) ───── */
